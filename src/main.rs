@@ -12,4 +12,5 @@ fn rocket() -> _ {
     rocket::build()
         .mount("/accounts", routes![routes::accounts::client_login])
         .mount("/reader", routes![routes::reader::ping])
+        .register("/", catchers![routes::unauthorized])
 }
