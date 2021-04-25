@@ -17,6 +17,8 @@ fn rocket() -> _ {
                 routes::reader::ping,
                 routes::reader::subscriptions::list_subscriptions,
                 routes::reader::users::get_user_info,
+                routes::reader::stream::get_item_ids,
+                routes::reader::stream::get_contents,
             ],
         )
         .register("/", catchers![routes::unauthorized])
