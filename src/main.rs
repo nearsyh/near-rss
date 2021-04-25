@@ -1,10 +1,14 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
-#[macro_use] extern crate rocket;
+#[macro_use]
+extern crate rocket;
 
+mod middlewares;
 mod routes;
 mod services;
 
 fn main() {
-    rocket::ignite().mount("/", routes![routes::accounts::client_login]).launch();
+    rocket::ignite()
+        .mount("/", routes![routes::accounts::client_login])
+        .launch();
 }
