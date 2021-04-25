@@ -1,4 +1,5 @@
 pub mod subscriptions;
+pub mod users;
 
 use crate::middlewares::auth::AuthToken;
 
