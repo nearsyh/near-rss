@@ -7,8 +7,8 @@ mod middlewares;
 mod routes;
 mod services;
 
-fn main() {
-    rocket::ignite()
+#[launch]
+fn rocket() -> _ {
+    rocket::build()
         .mount("/", routes![routes::accounts::client_login])
-        .launch();
 }
