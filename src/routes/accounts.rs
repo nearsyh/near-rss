@@ -10,7 +10,7 @@ pub struct LoginRequest {
   password: String,
 }
 
-#[post("/accounts/ClientLogin", data = "<request>")]
+#[post("/ClientLogin", data = "<request>")]
 pub fn client_login(request: Form<LoginRequest>) -> Result<String, Forbidden<String>> {
   match new_user_service().login(&request.email, &request.password) {
     Ok(ref creds) => Ok(format!(

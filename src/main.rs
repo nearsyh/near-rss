@@ -10,5 +10,6 @@ mod services;
 #[launch]
 fn rocket() -> _ {
     rocket::build()
-        .mount("/", routes![routes::accounts::client_login])
+        .mount("/accounts", routes![routes::accounts::client_login])
+        .mount("/reader", routes![routes::reader::ping])
 }

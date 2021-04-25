@@ -6,6 +6,8 @@ pub struct UserCreds {
 
 pub trait Users {
   fn login(&self, email: &str, password: &str) -> Result<UserCreds, String>;
+
+  fn is_token_valid(&self, token: &str) -> bool;
 }
 
 struct FakeUsers {}
@@ -21,6 +23,10 @@ impl Users for FakeUsers {
     } else {
       Err(String::from("Bad"))
     }
+  }
+
+  fn is_token_valid(&self, token: &str) -> bool {
+    return true;
   }
 }
 
