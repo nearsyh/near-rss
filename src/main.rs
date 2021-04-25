@@ -11,6 +11,12 @@ mod services;
 fn rocket() -> _ {
     rocket::build()
         .mount("/accounts", routes![routes::accounts::client_login])
-        .mount("/reader", routes![routes::reader::ping])
+        .mount(
+            "/reader",
+            routes![
+                routes::reader::ping,
+                routes::reader::subscriptions::list_subscriptions
+            ],
+        )
         .register("/", catchers![routes::unauthorized])
 }

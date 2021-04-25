@@ -11,8 +11,8 @@ pub struct LoginRequest {
 }
 
 #[post("/ClientLogin", data = "<request>")]
-pub fn client_login(request: Form<LoginRequest>) -> Result<String, Forbidden<String>> {
-  match new_user_service().login(&request.email, &request.password) {
+pub async fn client_login(request: Form<LoginRequest>) -> Result<String, Forbidden<String>> {
+  match new_user_service().login(&request.email, &request.password).await {
     Ok(ref creds) => Ok(format!(
       "SID={}\nLSID={}\nAuth={}",
       creds.sid, creds.lsid, creds.cltoken

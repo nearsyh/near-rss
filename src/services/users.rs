@@ -4,17 +4,28 @@ pub struct UserCreds {
   pub cltoken: String,
 }
 
-pub trait Users {
-  fn login(&self, email: &str, password: &str) -> Result<UserCreds, String>;
+pub struct User {
+  pub id: String,
+  pub email: String,
+  pub password_hash: String,
+  pub token: String
+}
 
-  fn is_token_valid(&self, token: &str) -> bool;
+#[rocket::async_trait]
+pub trait UserService {
+  async fn login(&self, email: &str, password: &str) -> Result<UserCreds, String>;
+
+  async fn is_token_valid(&self, token: &str) -> bool;
+
+  async fn get_user(&self, token: &str) -> User;
 }
 
 struct FakeUsers {}
 
-impl Users for FakeUsers {
-  fn login(&self, email: &str, password: &str) -> Result<UserCreds, String> {
-    if email == "1" {
+#[rocket::async_trait]
+impl UserService for FakeUsers {
+  async fn login(&self, email: &str, password: &str) -> Result<UserCreds, String> {
+    if email == "nearsy.h@gmail.com" {
       Ok(UserCreds {
         sid: String::from("sid"),
         lsid: String::from("lsid"),
@@ -25,11 +36,20 @@ impl Users for FakeUsers {
     }
   }
 
-  fn is_token_valid(&self, token: &str) -> bool {
+  async fn is_token_valid(&self, token: &str) -> bool {
     return true;
+  }
+
+  async fn get_user(&self, token: &str) -> User {
+    User {
+      id: "id".to_string(),
+      email: "nearsy.h@gmail.com".to_string(),
+      password_hash: "password_hash".to_string(),
+      token: token.to_string()
+    }
   }
 }
 
-pub fn new_user_service() -> Box<dyn Users> {
+pub fn new_user_service() -> Box<dyn UserService + Send + Sync> {
   Box::new(FakeUsers {})
 }
