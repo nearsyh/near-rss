@@ -1,12 +1,12 @@
 use crate::services::users::new_user_service;
-use rocket::request::{Form, FromForm};
+use rocket::form::Form;
 use rocket::response::status::Forbidden;
 
 #[derive(FromForm)]
 pub struct LoginRequest {
-  #[form(field = "Email")]
+  #[field(name = "Email")]
   email: String,
-  #[form(field = "Passwd")]
+  #[field(name = "Passwd")]
   password: String,
 }
 

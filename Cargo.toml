@@ -7,4 +7,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = "0.5.0-dev"
+
+[dependencies.rocket]
+git = "https://github.com/SergioBenitez/Rocket"
+
+[dependencies.rocket_contrib]
+git = "https://github.com/SergioBenitez/Rocket"
