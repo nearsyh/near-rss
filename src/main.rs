@@ -6,6 +6,7 @@ extern crate rocket;
 mod middlewares;
 mod routes;
 mod services;
+mod common;
 
 #[launch]
 fn rocket() -> _ {
