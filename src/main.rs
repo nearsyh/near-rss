@@ -7,6 +7,7 @@ mod middlewares;
 mod routes;
 mod services;
 mod common;
+mod database;
 
 #[launch]
 fn rocket() -> _ {

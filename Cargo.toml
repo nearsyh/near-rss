@@ -1,18 +1,20 @@
 [package]
-name = "near-rss"
-version = "0.1.0"
 authors = ["Nearsyh <nearsyh@gmail.com>"]
 edition = "2018"
+name = "near-rss"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = "1.0.125"
-feed-rs = "0.6.0"
-reqwest = "0.11.3"
-anyhow = "1.0"
-futures = "0.3.14"
 again = "0.1.2"
+anyhow = "1.0"
+feed-rs = "0.6.0"
+futures = "0.3.14"
+reqwest = "0.11.3"
+serde = "1.0.125"
+sqlx = {version = "0.5", features = ["runtime-tokio-rustls", "sqlite"]}
+rand = "0.8.3"
 
 [dependencies.rocket]
 git = "https://github.com/SergioBenitez/Rocket"
