@@ -31,18 +31,19 @@ impl User {
 
 #[rocket::async_trait]
 pub trait UserRepository {
-    async fn create_user(&mut self, email: &str, password: &str) -> Result<Option<User>>;
-    async fn update_user(&mut self, user: User) -> Result<Option<User>>;
-    async fn get_user_by_id(&mut self, id: &str) -> Result<Option<User>>;
-    async fn get_user_by_email(&mut self, email: &str) -> Result<Option<User>>;
-    async fn get_user_by_token(&mut self, token: &str) -> Result<Option<User>>;
+    async fn create_user(&self, email: &str, password: &str) -> Result<Option<User>>;
+    async fn update_user(&self, user: User) -> Result<Option<User>>;
+    async fn get_user_by_id(&self, id: &str) -> Result<Option<User>>;
+    async fn get_user_by_email(&self, email: &str) -> Result<Option<User>>;
+    async fn get_user_by_token(&self, token: &str) -> Result<Option<User>>;
 }
 
 use sqlx::Connection;
 use sqlx::SqliteConnection;
+use sqlx::SqlitePool;
 
 struct UserRepositorySqlite {
-    connection: SqliteConnection,
+    pool: SqlitePool,
 }
 
 unsafe impl Send for UserRepositorySqlite {}
@@ -50,7 +51,7 @@ unsafe impl Sync for UserRepositorySqlite {}
 
 impl UserRepositorySqlite {
     pub async fn new(path: &str) -> Result<UserRepositorySqlite> {
-        let mut connection = SqliteConnection::connect(path).await?;
+        let pool = SqlitePool::connect(path).await?;
         sqlx::query(
             "CREATE TABLE IF NOT EXISTS Users (
           id TEXT NOT NULL PRIMARY KEY,
@@ -58,17 +59,15 @@ impl UserRepositorySqlite {
           password_hash TEXT NOT NULL,
           token TEXT)",
         )
-        .execute(&mut connection)
+        .execute(&pool)
         .await?;
-        Ok(UserRepositorySqlite {
-            connection: connection,
-        })
+        Ok(UserRepositorySqlite { pool: pool })
     }
 }
 
 #[rocket::async_trait]
 impl UserRepository for UserRepositorySqlite {
-    async fn create_user(&mut self, email: &str, password: &str) -> Result<Option<User>> {
+    async fn create_user(&self, email: &str, password: &str) -> Result<Option<User>> {
         if self.get_user_by_email(email).await?.is_some() {
             return Ok(None);
         }
@@ -81,12 +80,12 @@ impl UserRepository for UserRepositorySqlite {
         .bind(&new_user.email)
         .bind(&new_user.password_hash)
         .bind(&new_user.token)
-        .execute(&mut self.connection)
+        .execute(&self.pool)
         .await?;
         Ok(Some(new_user))
     }
 
-    async fn update_user(&mut self, user: User) -> Result<Option<User>> {
+    async fn update_user(&self, user: User) -> Result<Option<User>> {
         if self.get_user_by_id(&user.id).await?.is_none() {
             return Ok(None);
         }
@@ -95,31 +94,31 @@ impl UserRepository for UserRepositorySqlite {
             .bind(&user.password_hash)
             .bind(&user.token)
             .bind(&user.id)
-            .execute(&mut self.connection)
+            .execute(&self.pool)
             .await?;
         Ok(Some(user))
     }
 
-    async fn get_user_by_email(&mut self, email: &str) -> Result<Option<User>> {
+    async fn get_user_by_email(&self, email: &str) -> Result<Option<User>> {
         let user = sqlx::query_as::<_, User>("SELECT * FROM Users WHERE email = ?")
             .bind(email)
-            .fetch_optional(&mut self.connection)
+            .fetch_optional(&self.pool)
             .await?;
         Ok(user)
     }
 
-    async fn get_user_by_id(&mut self, id: &str) -> Result<Option<User>> {
+    async fn get_user_by_id(&self, id: &str) -> Result<Option<User>> {
         let user = sqlx::query_as::<_, User>("SELECT * FROM Users WHERE id = ?")
             .bind(id)
-            .fetch_optional(&mut self.connection)
+            .fetch_optional(&self.pool)
             .await?;
         Ok(user)
     }
 
-    async fn get_user_by_token(&mut self, token: &str) -> Result<Option<User>> {
+    async fn get_user_by_token(&self, token: &str) -> Result<Option<User>> {
         let user = sqlx::query_as::<_, User>("SELECT * FROM Users WHERE token = ?")
             .bind(token)
-            .fetch_optional(&mut self.connection)
+            .fetch_optional(&self.pool)
             .await?;
         Ok(user)
     }
@@ -186,11 +185,7 @@ mod tests {
     #[rocket::async_test]
     async fn get_non_existing_users_should_fail() {
         let mut repository = new_user_repository("sqlite::memory:").await.unwrap();
-        assert!(repository
-            .get_user_by_id("id")
-            .await
-            .unwrap()
-            .is_none());
+        assert!(repository.get_user_by_id("id").await.unwrap().is_none());
         assert!(repository
             .get_user_by_email("email")
             .await
