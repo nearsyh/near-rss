@@ -37,4 +37,8 @@ impl Token {
             }),
         }
     }
+
+    pub fn is_valid(token: &str) -> bool {
+        Token::parse(token).is_some()
+    }
 }

@@ -926,6 +926,7 @@ dependencies = [
  "rocket_contrib",
  "serde",
  "sqlx",
+ "thiserror",
 ]
 
 [[package]]

@@ -12,7 +12,7 @@ pub struct LoginRequest {
 
 #[post("/ClientLogin", data = "<request>")]
 pub async fn client_login(request: Form<LoginRequest>) -> Result<String, Forbidden<String>> {
-    match new_user_service()
+    match new_user_service().await
         .login(&request.email, &request.password)
         .await
     {

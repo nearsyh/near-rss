@@ -13,19 +13,27 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(id: &str, email: &str, password: &str) -> User {
+    fn hash_password(password: &str) -> String {
         let mut hasher = DefaultHasher::new();
         hasher.write(password.as_bytes());
+        hasher.finish().to_string()
+    }
+
+    pub fn new(id: &str, email: &str, password: &str) -> User {
         User {
             id: id.to_string(),
             email: email.to_string(),
-            password_hash: hasher.finish().to_string(),
+            password_hash: User::hash_password(password),
             token: Token::new(id).to_string(),
         }
     }
 
     pub fn token(&self) -> Token {
         Token::parse(&self.token).unwrap()
+    }
+
+    pub fn match_password(&self, password: &str) -> bool {
+        User::hash_password(password).eq(password)
     }
 }
 
@@ -38,8 +46,6 @@ pub trait UserRepository {
     async fn get_user_by_token(&self, token: &str) -> Result<Option<User>>;
 }
 
-use sqlx::Connection;
-use sqlx::SqliteConnection;
 use sqlx::SqlitePool;
 
 struct UserRepositorySqlite {

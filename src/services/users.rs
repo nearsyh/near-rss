@@ -1,55 +1,59 @@
+use crate::common::error::Errors;
+use crate::database::users::{new_user_repository, User, UserRepository};
+use anyhow::{Error, Result};
+
 pub struct UserCreds {
     pub sid: String,
     pub lsid: String,
     pub cltoken: String,
 }
 
-pub struct User {
-    pub id: String,
-    pub email: String,
-    pub password_hash: String,
-    pub token: String,
-}
-
 #[rocket::async_trait]
 pub trait UserService {
-    async fn login(&self, email: &str, password: &str) -> Result<UserCreds, String>;
+    async fn login(&self, email: &str, password: &str) -> Result<UserCreds>;
 
-    async fn is_token_valid(&self, token: &str) -> bool;
-
-    async fn get_user(&self, token: &str) -> User;
+    async fn get_user(&self, token: &str) -> Result<User>;
 }
 
-struct FakeUsers {}
+struct UserServiceImpl {
+    user_repository: Box<dyn UserRepository + Send + Sync>,
+}
 
 #[rocket::async_trait]
-impl UserService for FakeUsers {
-    async fn login(&self, email: &str, password: &str) -> Result<UserCreds, String> {
-        if email == "nearsy.h@gmail.com" {
-            Ok(UserCreds {
-                sid: String::from("sid"),
-                lsid: String::from("lsid"),
-                cltoken: String::from("cltoken"),
-            })
-        } else {
-            Err(String::from("Bad"))
+impl UserService for UserServiceImpl {
+    async fn login(&self, email: &str, password: &str) -> Result<UserCreds> {
+        match self.user_repository.get_user_by_email(email).await? {
+            None => Err(Error::new(Errors::NonExistUser {
+                email: email.to_string(),
+            })),
+            Some(ref user) => {
+                let token = user.token();
+                if user.match_password(password) {
+                    Ok(UserCreds {
+                        sid: token.sid.clone(),
+                        lsid: token.sid.clone(),
+                        cltoken: token.to_string(),
+                    })
+                } else {
+                    Err(Error::new(Errors::WrongPassword))
+                }
+            }
         }
     }
 
-    async fn is_token_valid(&self, token: &str) -> bool {
-        return true;
-    }
-
-    async fn get_user(&self, token: &str) -> User {
-        User {
-            id: "id".to_string(),
-            email: "nearsy.h@gmail.com".to_string(),
-            password_hash: "password_hash".to_string(),
-            token: token.to_string(),
+    async fn get_user(&self, token: &str) -> Result<User> {
+        match self.user_repository.get_user_by_token(token).await? {
+            None => Err(Error::new(Errors::InvalidToken {
+                token: token.to_string(),
+            })),
+            Some(user) => Ok(user),
         }
     }
 }
 
-pub fn new_user_service() -> Box<dyn UserService + Send + Sync> {
-    Box::new(FakeUsers {})
+pub async fn new_user_service() -> Box<dyn UserService + Send + Sync> {
+    let repository = new_user_repository("sqlite::memory:").await.unwrap();
+    Box::new(UserServiceImpl {
+        user_repository: repository,
+    })
 }

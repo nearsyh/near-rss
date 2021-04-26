@@ -1,4 +1,4 @@
-use crate::middlewares::auth::AuthToken;
+use crate::middlewares::auth::AuthUser;
 use crate::services::users::new_user_service;
 use rocket_contrib::json::Json;
 use serde::Serialize;
@@ -16,8 +16,8 @@ pub struct UserInfo {
 }
 
 #[get("/api/0/user-info")]
-pub async fn get_user_info(token: AuthToken<'_>) -> Json<UserInfo> {
-    let user = new_user_service().get_user(token.0).await;
+pub async fn get_user_info(auth_user: AuthUser) -> Json<UserInfo> {
+    let user = auth_user.user;
     Json(UserInfo {
         user_id: user.id.clone(),
         user_name: user.email.clone(),
