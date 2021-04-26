@@ -8,6 +8,9 @@ edition = "2018"
 
 [dependencies]
 serde = "1.0.125"
+feed-rs = "0.6.0"
+reqwest = "0.11.3"
+anyhow = "1.0"
 
 [dependencies.rocket]
 git = "https://github.com/SergioBenitez/Rocket"
