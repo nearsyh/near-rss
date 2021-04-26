@@ -3,9 +3,10 @@ use rocket_contrib::json::Json;
 
 #[derive(Serialize)]
 pub struct Item {
-
+  pub id: i64,
+  pub direct_stream_ids: Vec<String>,
+  pub timestamp_usec: i64,
 }
-
 
 #[get("/api/0/stream/items/ids")]
 pub async fn get_item_ids() -> Json<Vec<Item>> {
