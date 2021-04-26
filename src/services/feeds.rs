@@ -1,3 +1,4 @@
+use again::RetryPolicy;
 use anyhow::Result;
 use feed_rs::model::Feed;
 use feed_rs::parser;
@@ -7,6 +8,7 @@ use futures::stream::FuturesUnordered;
 use futures::stream::StreamExt;
 use reqwest;
 use std::collections::HashMap;
+use std::time::Duration;
 
 #[rocket::async_trait]
 pub trait FeedService {
@@ -20,7 +22,11 @@ struct FeedServiceImpl {}
 #[rocket::async_trait]
 impl FeedService for FeedServiceImpl {
   async fn get_feed(&self, url: &str) -> Result<Feed> {
-    let body = reqwest::get(url).await?.text().await?;
+    let policy = RetryPolicy::fixed(Duration::from_millis(100))
+      .with_max_retries(3)
+      .with_jitter(true);
+    let response = policy.retry(|| reqwest::get(url));
+    let body = response.await?.text().await?;
     let feed = parser::parse(body.as_bytes())?;
     Ok(feed)
   }
