@@ -12,6 +12,7 @@ pub struct Subscription {
     pub title: String,
     pub categories: Vec<Category>,
     pub url: String,
+    pub feed_url: String,
 }
 
 #[rocket::async_trait]
@@ -39,6 +40,7 @@ impl SubscriptionService for FakeSubscriptionService {
             title: "Hacker News Daily".to_string(),
             categories: vec![],
             url: "https://www.daemonology.net/hn-daily/".to_string(),
+            feed_url: "http://www.daemonology.net/hn-daily/index.rss".to_string(),
         }];
     }
 }

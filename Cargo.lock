@@ -697,6 +697,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "feed-rs",
+ "futures",
  "reqwest",
  "rocket",
  "rocket_contrib",
