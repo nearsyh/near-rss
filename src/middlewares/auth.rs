@@ -8,7 +8,6 @@ use rocket::request::{FromRequest, Outcome, Request};
 pub enum AuthError {
     MissingToken,
     InvalidToken,
-    NonExistUser,
     Internal,
 }
 

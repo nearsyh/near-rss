@@ -29,7 +29,7 @@ unsafe impl Sync for Services {}
 
 lazy_static! {
   pub static ref SERVICES: AsyncOnce<Services> = AsyncOnce::new(async {
-    let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+    let pool = crate::database::in_memory_pool().await;
     let ret = Services::new(pool).await;
     let user = ret.user_service.register("nearsy.h@gmail.com", "1234")
         .await
@@ -46,7 +46,7 @@ lazy_static! {
 impl<'r> FromRequest<'r> for &Services {
   type Error = Errors;
 
-  async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+  async fn from_request(_req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
     Outcome::Success(SERVICES.get().await)
   }
 }

@@ -37,11 +37,6 @@ unsafe impl Send for SubscriptionRepositorySqlite {}
 unsafe impl Sync for SubscriptionRepositorySqlite {}
 
 impl SubscriptionRepositorySqlite {
-    pub async fn new_with_path(path: &str) -> Result<SubscriptionRepositorySqlite> {
-        let pool = SqlitePool::connect(path).await?;
-        Self::new(pool).await
-    }
-
     pub async fn new(pool: SqlitePool) -> Result<SubscriptionRepositorySqlite> {
         sqlx::query(
             "CREATE TABLE IF NOT EXISTS Subscriptions (
@@ -142,13 +137,6 @@ impl SubscriptionRepository for SubscriptionRepositorySqlite {
     }
 }
 
-pub async fn new_subscription_repository_with_path(
-    path: &str,
-) -> Result<Box<dyn SubscriptionRepository + Send + Sync>> {
-    let repository = SubscriptionRepositorySqlite::new_with_path(path).await?;
-    Ok(Box::new(repository))
-}
-
 pub async fn new_subscription_repository(
     pool: SqlitePool,
 ) -> Result<Box<dyn SubscriptionRepository + Send + Sync>> {
@@ -159,10 +147,11 @@ pub async fn new_subscription_repository(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::in_memory_pool;
 
     #[rocket::async_test]
     pub async fn insert_and_get_subscription_should_succeed() {
-        let repository = new_subscription_repository_with_path("sqlite::memory:")
+        let repository = new_subscription_repository(in_memory_pool().await)
             .await
             .unwrap();
         let subscription = Subscription {
@@ -191,7 +180,7 @@ mod tests {
 
     #[rocket::async_test]
     pub async fn remove_subscription_should_succeed() {
-        let repository = new_subscription_repository_with_path("sqlite::memory:")
+        let repository = new_subscription_repository(in_memory_pool().await)
             .await
             .unwrap();
         let subscription = Subscription {
@@ -221,7 +210,7 @@ mod tests {
 
     #[rocket::async_test]
     pub async fn update_subscription_should_succeed() {
-        let repository = new_subscription_repository_with_path("sqlite::memory:")
+        let repository = new_subscription_repository(in_memory_pool().await)
             .await
             .unwrap();
         let subscription = Subscription {
@@ -262,7 +251,7 @@ mod tests {
 
     #[rocket::async_test]
     pub async fn list_subscriptions_should_succeed() {
-        let repository = new_subscription_repository_with_path("sqlite::memory:")
+        let repository = new_subscription_repository(in_memory_pool().await)
             .await
             .unwrap();
         let subscription_1 = Subscription {

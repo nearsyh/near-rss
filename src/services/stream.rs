@@ -17,8 +17,8 @@ struct StreamServiceImpl {}
 impl StreamService for StreamServiceImpl {
     async fn get_unread_items(
         &self,
-        user_id: &str,
-        page_option: PageOption<i64>,
+        _user_id: &str,
+        _page_option: PageOption<i64>,
     ) -> Page<Item, i64> {
         Page::<Item, i64> {
             items: vec![],

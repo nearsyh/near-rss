@@ -1,5 +1,5 @@
 use crate::common::error::Errors;
-use crate::database::users::{new_user_repository, User, UserRepository};
+use crate::database::users::{User, UserRepository};
 use anyhow::{Error, Result};
 
 pub struct UserCreds {

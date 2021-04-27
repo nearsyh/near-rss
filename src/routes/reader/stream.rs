@@ -36,18 +36,18 @@ impl FilterType {
 
 #[get("/api/0/stream/items/ids?<s>&<xt>&<n>&<r>&<c>")]
 pub async fn get_item_ids(
-  auth_user: AuthUser,
-  services: &Services,
+  _auth_user: AuthUser,
+  _services: &Services,
   s: Option<&str>,
   xt: Option<&str>,
   n: Option<usize>,
   r: Option<&str>,
   c: Option<&str>,
 ) -> Json<Vec<Item>> {
-  let page_option = PageOption::<String> {
+  let _page_option = PageOption::<String> {
     offset: c.map(|s| String::from(s)),
-    limit: n.unwrap_or_default(100),
-    desc: !r.unwrap_or_default("").eq("o")
+    limit: n.unwrap_or(100usize),
+    desc: !r.unwrap_or("").eq("o")
   };
   let items = match FilterType::from_params(s, xt) {
     FilterType::STARRED => Json(vec![]),

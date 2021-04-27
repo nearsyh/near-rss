@@ -1,4 +1,4 @@
-use crate::database::subscriptions::{new_subscription_repository, SubscriptionRepository};
+use crate::database::subscriptions::SubscriptionRepository;
 use crate::services::feeds::{new_feed_service, FeedService};
 use anyhow::Result;
 use feed_rs::model::Feed;

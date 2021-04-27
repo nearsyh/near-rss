@@ -68,10 +68,6 @@ impl UserRepositorySqlite {
     .await?;
     Ok(UserRepositorySqlite { pool: pool })
   }
-  pub async fn new_with_path(path: &str) -> Result<UserRepositorySqlite> {
-    let pool = SqlitePool::connect(path).await?;
-    Self::new(pool).await
-  }
 }
 
 #[rocket::async_trait]
@@ -133,13 +129,6 @@ impl UserRepository for UserRepositorySqlite {
   }
 }
 
-pub async fn new_user_repository_with_path(
-  path: &str,
-) -> Result<Box<dyn UserRepository + Send + Sync>> {
-  let repository = UserRepositorySqlite::new_with_path(path).await?;
-  Ok(Box::new(repository))
-}
-
 pub async fn new_user_repository(
   pool: SqlitePool,
 ) -> Result<Box<dyn UserRepository + Send + Sync>> {
@@ -150,10 +139,11 @@ pub async fn new_user_repository(
 #[cfg(test)]
 mod tests {
   use super::*;
+  use super::super::in_memory_pool;
 
   #[rocket::async_test]
   async fn create_user_should_work() {
-    let mut repository = new_user_repository_with_path("sqlite::memory:")
+    let repository = new_user_repository(in_memory_pool().await)
       .await
       .unwrap();
     let created_user = repository
@@ -167,7 +157,7 @@ mod tests {
 
   #[rocket::async_test]
   async fn create_users_with_same_emails_should_fail() {
-    let mut repository = new_user_repository_with_path("sqlite::memory:")
+    let repository = new_user_repository(in_memory_pool().await)
       .await
       .unwrap();
     assert!(repository.create_user("email", "").await.unwrap().is_some());
@@ -176,7 +166,7 @@ mod tests {
 
   #[rocket::async_test]
   async fn get_existing_users_should_succeed() {
-    let mut repository = new_user_repository_with_path("sqlite::memory:")
+    let repository = new_user_repository(in_memory_pool().await)
       .await
       .unwrap();
     let created_user = repository.create_user("email", "").await.unwrap().unwrap();
@@ -208,7 +198,7 @@ mod tests {
 
   #[rocket::async_test]
   async fn get_non_existing_users_should_fail() {
-    let mut repository = new_user_repository_with_path("sqlite::memory:")
+    let repository = new_user_repository(in_memory_pool().await)
       .await
       .unwrap();
     assert!(repository.get_user_by_id("id").await.unwrap().is_none());
