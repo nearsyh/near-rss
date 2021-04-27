@@ -2,7 +2,7 @@ pub mod error;
 pub mod token;
 
 pub struct PageOption<T> {
-    pub offset: T,
+    pub offset: Option<T>,
     pub limit: u32,
     pub desc: bool,
 }
