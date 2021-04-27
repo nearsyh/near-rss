@@ -66,7 +66,7 @@ impl SubscriptionRepository for SubscriptionRepositorySqlite {
         sqlx::query(
             "INSERT INTO Subscriptions 
       (user_id, id, url, title, description, feed_url, joined_categories, last_fetch_ms)
-      VALUES (?,?,?,?,?,?,?)",
+      VALUES (?,?,?,?,?,?,?,?)",
         )
         .bind(&subscription.user_id)
         .bind(&subscription.id)

@@ -103,7 +103,7 @@ impl SubscriptionService for SubscriptionServiceImpl {
 
     async fn add_subscription_from_url(&self, user_id: &str, url: &str) -> Result<Subscription> {
         let subscription = self.get_subscription_from_url(url).await?;
-        self.add_subscription(user_id, subscription.clone());
+        self.add_subscription(user_id, subscription.clone()).await?;
         Ok(subscription)
     }
 

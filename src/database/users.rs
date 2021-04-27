@@ -33,7 +33,7 @@ impl User {
   }
 
   pub fn match_password(&self, password: &str) -> bool {
-    User::hash_password(password).eq(password)
+    self.password_hash.eq(&User::hash_password(password))
   }
 }
 
