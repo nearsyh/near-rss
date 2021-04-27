@@ -4,19 +4,27 @@ use sqlx::SqlitePool;
 
 #[derive(sqlx::FromRow, PartialEq, Eq, Debug, Clone)]
 pub struct Subscription {
-    user_id: String,
-    id: String,
-    url: String,
-    title: String,
-    description: String,
-    joined_categories: String,
-    last_fetch_ms: i64,
+    pub user_id: String,
+    pub id: String,
+    pub url: String,
+    pub title: String,
+    pub description: String,
+    pub feed_url: String,
+    pub joined_categories: String,
+    pub last_fetch_ms: i64,
+}
+
+impl Subscription {
+    pub fn categories(&self) -> Vec<&str> {
+        self.joined_categories.split(',').collect()
+    }
 }
 
 #[rocket::async_trait]
 pub trait SubscriptionRepository {
     async fn insert_subscription(&self, subscription: Subscription) -> Result<()>;
     async fn update_subscription(&self, subscription: Subscription) -> Result<Subscription>;
+    async fn remove_subscription(&self, user_id: &str, id: &str) -> Result<()>;
     async fn get_subscription(&self, user_id: &str, id: &str) -> Result<Option<Subscription>>;
     async fn list_user_subscriptions(&self, user_id: &str) -> Result<Vec<Subscription>>;
 }
@@ -38,6 +46,7 @@ impl SubscriptionRepositorySqlite {
       url TEXT NOT NULL,
       title TEXT NOT NULL,
       description TEXT NOT NULL,
+      feed_url TEXT NOT NULL,
       joined_categories TEXT,
       last_fetch_ms INTEGER NOT NULL)",
         )
@@ -52,7 +61,7 @@ impl SubscriptionRepository for SubscriptionRepositorySqlite {
     async fn insert_subscription(&self, subscription: Subscription) -> Result<()> {
         sqlx::query(
             "INSERT INTO Subscriptions 
-      (user_id, id, url, title, description, joined_categories, last_fetch_ms)
+      (user_id, id, url, title, description, feed_url, joined_categories, last_fetch_ms)
       VALUES (?,?,?,?,?,?,?)",
         )
         .bind(&subscription.user_id)
@@ -60,6 +69,7 @@ impl SubscriptionRepository for SubscriptionRepositorySqlite {
         .bind(&subscription.url)
         .bind(&subscription.title)
         .bind(&subscription.description)
+        .bind(&subscription.feed_url)
         .bind(&subscription.joined_categories)
         .bind(subscription.last_fetch_ms)
         .execute(&self.pool)
@@ -80,6 +90,7 @@ impl SubscriptionRepository for SubscriptionRepositorySqlite {
         url = ?,
         title = ?,
         description = ?,
+        feed_url = ?,
         joined_categories = ?,
         last_fetch_ms = ?
         WHERE user_id = ? AND id = ?",
@@ -87,6 +98,7 @@ impl SubscriptionRepository for SubscriptionRepositorySqlite {
         .bind(&subscription.url)
         .bind(&subscription.title)
         .bind(&subscription.description)
+        .bind(&subscription.feed_url)
         .bind(&subscription.joined_categories)
         .bind(subscription.last_fetch_ms)
         .bind(&subscription.user_id)
@@ -94,6 +106,15 @@ impl SubscriptionRepository for SubscriptionRepositorySqlite {
         .execute(&self.pool)
         .await?;
         Ok(subscription)
+    }
+
+    async fn remove_subscription(&self, user_id: &str, id: &str) -> Result<()> {
+        sqlx::query("DELETE FROM Subscriptions WHERE user_id = ? AND id = ?")
+            .bind(user_id)
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
     }
 
     async fn get_subscription(&self, user_id: &str, id: &str) -> Result<Option<Subscription>> {
@@ -139,6 +160,7 @@ mod tests {
             url: "url".to_string(),
             title: "title".to_string(),
             description: "description".to_string(),
+            feed_url: "feed_url".to_string(),
             joined_categories: "joined_categories".to_string(),
             last_fetch_ms: 0,
         };
@@ -157,6 +179,36 @@ mod tests {
     }
 
     #[rocket::async_test]
+    pub async fn remove_subscription_should_succeed() {
+        let repository = new_subscription_repository("sqlite::memory:")
+            .await
+            .unwrap();
+        let subscription = Subscription {
+            user_id: "user_id".to_string(),
+            id: "id".to_string(),
+            url: "url".to_string(),
+            title: "title".to_string(),
+            description: "description".to_string(),
+            feed_url: "feed_url".to_string(),
+            joined_categories: "joined_categories".to_string(),
+            last_fetch_ms: 0,
+        };
+        repository
+            .insert_subscription(subscription.clone())
+            .await
+            .unwrap();
+        repository
+            .remove_subscription(&subscription.user_id, &subscription.id)
+            .await
+            .unwrap();
+        assert!(repository
+            .get_subscription(&subscription.user_id, &subscription.id)
+            .await
+            .unwrap()
+            .is_none());
+    }
+
+    #[rocket::async_test]
     pub async fn update_subscription_should_succeed() {
         let repository = new_subscription_repository("sqlite::memory:")
             .await
@@ -167,6 +219,7 @@ mod tests {
             url: "url".to_string(),
             title: "title".to_string(),
             description: "description".to_string(),
+            feed_url: "feed_url".to_string(),
             joined_categories: "joined_categories".to_string(),
             last_fetch_ms: 0,
         };
@@ -179,6 +232,7 @@ mod tests {
         updated_subscription.url = "url_2".to_string();
         updated_subscription.title = "title_2".to_string();
         updated_subscription.description = "description_2".to_string();
+        updated_subscription.feed_url = "feed_url_2".to_string();
         updated_subscription.joined_categories = "joined_categories_2".to_string();
         updated_subscription.last_fetch_ms = 1;
         repository
@@ -206,6 +260,7 @@ mod tests {
             url: "url".to_string(),
             title: "title".to_string(),
             description: "description".to_string(),
+            feed_url: "feed_url".to_string(),
             joined_categories: "joined_categories".to_string(),
             last_fetch_ms: 0,
         };
@@ -219,6 +274,7 @@ mod tests {
         subscription_2.url = "url_2".to_string();
         subscription_2.title = "title_2".to_string();
         subscription_2.description = "description_2".to_string();
+        subscription_2.feed_url = "feed_url_2".to_string();
         subscription_2.joined_categories = "joined_categories_2".to_string();
         subscription_2.last_fetch_ms = 1;
         repository

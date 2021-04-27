@@ -1,5 +1,4 @@
 use crate::middlewares::auth::AuthUser;
-use crate::services::users::new_user_service;
 use rocket_contrib::json::Json;
 use serde::Serialize;
 

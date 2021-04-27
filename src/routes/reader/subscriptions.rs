@@ -11,9 +11,11 @@ pub struct Subscriptions {
 #[get("/api/0/subscription/list")]
 pub async fn list_subscriptions(auth_user: AuthUser) -> Json<Subscriptions> {
     let user = auth_user.user;
+    // TODO: handle error properly
     let subscriptions = new_subscription_service()
-        .list_subscriptions(&user.id, 0, 100)
-        .await;
+        .list_subscriptions(&user.id)
+        .await
+        .unwrap();
     Json(Subscriptions {
         subscriptions: subscriptions,
     })
