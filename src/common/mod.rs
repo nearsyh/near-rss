@@ -1,5 +1,5 @@
-pub mod token;
 pub mod error;
+pub mod token;
 
 pub struct PageOption<T> {
     pub offset: T,
