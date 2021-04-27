@@ -62,8 +62,9 @@ impl UserService for UserServiceImpl {
     }
 }
 
-pub async fn new_user_service() -> Box<dyn UserService + Send + Sync> {
-    let repository = new_user_repository("sqlite::memory:").await.unwrap();
+pub fn new_user_service(
+    repository: Box<dyn UserRepository + Send + Sync>,
+) -> Box<dyn UserService + Send + Sync> {
     Box::new(UserServiceImpl {
         user_repository: repository,
     })

@@ -1,6 +1,6 @@
+use super::di::SERVICES;
 use crate::common::token::Token;
 use crate::database::users::User;
-use crate::services::users::new_user_service;
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome, Request};
 
@@ -32,7 +32,7 @@ impl<'r> FromRequest<'r> for AuthUser {
                     if !Token::is_valid(&token) {
                         return Outcome::Failure((Status::Forbidden, AuthError::InvalidToken));
                     }
-                    match new_user_service().await.get_user(token).await {
+                    match SERVICES.get().await.user_service.get_user(token).await {
                         Err(_) => {
                             Outcome::Failure((Status::InternalServerError, AuthError::Internal))
                         }

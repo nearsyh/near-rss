@@ -133,10 +133,9 @@ impl SubscriptionService for SubscriptionServiceImpl {
     }
 }
 
-pub async fn new_subscription_service() -> Box<dyn SubscriptionService + Send + Sync> {
-    let repository = new_subscription_repository("sqlite::memory:")
-        .await
-        .unwrap();
+pub fn new_subscription_service(
+    repository: Box<dyn SubscriptionRepository + Send + Sync>,
+) -> Box<dyn SubscriptionService + Send + Sync> {
     Box::new(SubscriptionServiceImpl {
         subscription_repository: repository,
         feed_service: new_feed_service(),

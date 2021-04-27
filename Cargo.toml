@@ -16,6 +16,8 @@ serde = "1.0.125"
 sqlx = {version = "0.5", features = ["runtime-tokio-rustls", "sqlite"]}
 rand = "0.8.3"
 thiserror = "1.0.24"
+async_once = "0.2.1"
+lazy_static = "1.4.0"
 
 [dependencies.rocket]
 git = "https://github.com/SergioBenitez/Rocket"

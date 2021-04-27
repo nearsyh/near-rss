@@ -1,7 +1,6 @@
 use crate::middlewares::auth::AuthUser;
-use crate::services::feeds::new_feed_service;
-use crate::services::subscriptions::{new_subscription_service, Subscription};
-use feed_rs::model::Feed;
+use crate::middlewares::di::Services;
+use crate::services::subscriptions::Subscription;
 use rocket_contrib::json::Json;
 use serde::Serialize;
 
@@ -11,11 +10,11 @@ pub struct Subscriptions {
 }
 
 #[get("/api/0/subscription/list")]
-pub async fn list_subscriptions(auth_user: AuthUser) -> Json<Subscriptions> {
+pub async fn list_subscriptions(auth_user: AuthUser, services: &Services) -> Json<Subscriptions> {
     let user = auth_user.user;
     // TODO: handle error properly
-    let subscriptions = new_subscription_service()
-        .await
+    let subscriptions = services
+        .subscription_service
         .list_subscriptions(&user.id)
         .await
         .unwrap();
@@ -35,12 +34,13 @@ pub struct AddSubscriptionResponse {
 #[get("/api/0/subscription/quickadd?<quickadd>")]
 pub async fn add_subscription(
     auth_user: AuthUser,
+    services: &Services,
     quickadd: &'_ str,
 ) -> Json<AddSubscriptionResponse> {
     let user = auth_user.user;
     // TODO: handle error properly
-    let subscription = new_subscription_service()
-        .await
+    let subscription = services
+        .subscription_service
         .add_subscription_from_url(&user.id, quickadd)
         .await
         .unwrap();

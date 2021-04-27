@@ -1,4 +1,4 @@
-use crate::services::users::new_user_service;
+use crate::middlewares::di::Services;
 use rocket::form::Form;
 use rocket::response::status::Forbidden;
 
@@ -11,9 +11,12 @@ pub struct LoginRequest {
 }
 
 #[post("/ClientLogin", data = "<request>")]
-pub async fn client_login(request: Form<LoginRequest>) -> Result<String, Forbidden<String>> {
-    match new_user_service()
-        .await
+pub async fn client_login(
+    request: Form<LoginRequest>,
+    services: &Services,
+) -> Result<String, Forbidden<String>> {
+    match services
+        .user_service
         .login(&request.email, &request.password)
         .await
     {
