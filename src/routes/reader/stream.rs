@@ -22,14 +22,19 @@ pub struct Items {
 enum FilterType {
   UNREAD,
   STARRED,
+  ALL
 }
 
 impl FilterType {
-  fn from_params(s: Option<&str>, _xt: Option<&str>) -> FilterType {
-    if s.is_some() && s.unwrap().ends_with("/state/com.google/starred") {
+  fn from_params(s: &str, xt: Option<&str>) -> FilterType {
+    if s.ends_with("/state/com.google/starred") {
       FilterType::STARRED
     } else {
-      FilterType::UNREAD
+      if xt.is_some() && xt.unwrap().ends_with("/state/com.google/read") {
+        FilterType::UNREAD
+      } else {
+        FilterType::ALL
+      }
     }
   }
 }
@@ -38,7 +43,7 @@ impl FilterType {
 pub async fn get_item_ids(
   _auth_user: AuthUser,
   _services: &Services,
-  s: Option<&str>,
+  s: &str,
   xt: Option<&str>,
   n: Option<usize>,
   r: Option<&str>,
@@ -52,6 +57,7 @@ pub async fn get_item_ids(
   let items = match FilterType::from_params(s, xt) {
     FilterType::STARRED => Json(vec![]),
     FilterType::UNREAD => Json(vec![]),
+    FilterType::ALL => Json(vec![]),
   };
   items
 }
