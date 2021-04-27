@@ -9,8 +9,23 @@ mod middlewares;
 mod routes;
 mod services;
 
+async fn init() {
+    let user = services::users::new_user_service()
+        .await
+        .register("nearsy.h@gmail.com", "1234")
+        .await
+        .unwrap();
+
+    services::subscriptions::new_subscription_service()
+        .await
+        .add_subscription_from_url(&user.id, "https://www.daemonology.net/hn-daily/index.rss")
+        .await
+        .unwrap();
+}
+
 #[launch]
-fn rocket() -> _ {
+async fn rocket() -> _ {
+    init().await;
     rocket::build()
         .mount("/accounts", routes![routes::accounts::client_login])
         .mount(

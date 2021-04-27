@@ -22,20 +22,21 @@ pub struct Subscription {
 
 impl From<crate::database::subscriptions::Subscription> for Subscription {
     fn from(db_subscription: crate::database::subscriptions::Subscription) -> Self {
+        let categories = db_subscription
+            .categories()
+            .into_iter()
+            .map(|category_str| Category {
+                id: format!("user/{}/label/{}", db_subscription.user_id, category_str),
+                label: category_str.to_string(),
+            })
+            .collect();
         Subscription {
             id: db_subscription.id,
             title: db_subscription.title,
             description: db_subscription.description,
             url: db_subscription.url,
             feed_url: db_subscription.feed_url,
-            categories: db_subscription
-                .categories()
-                .into_iter()
-                .map(|category_str| Category {
-                    id: format!("user/{}/label/{}", db_subscription.user_id, category_str),
-                    label: category_str.to_string(),
-                })
-                .collect(),
+            categories: categories,
         }
     }
 }
@@ -52,7 +53,7 @@ impl Subscription {
             joined_categories: self
                 .categories
                 .iter()
-                .map(|category| category.label)
+                .map(|category| category.label.clone())
                 .collect::<Vec<String>>()
                 .join(","),
             last_fetch_ms: 0,
@@ -68,7 +69,7 @@ impl Subscription {
             url: if feed.links.is_empty() {
                 url.to_string()
             } else {
-                feed.links[0].href
+                feed.links[0].href.clone()
             },
             feed_url: url.to_string(),
         }
