@@ -146,8 +146,8 @@ pub async fn new_subscription_repository(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::in_memory_pool;
+    use super::*;
 
     #[rocket::async_test]
     pub async fn insert_and_get_subscription_should_succeed() {
