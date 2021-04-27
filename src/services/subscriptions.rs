@@ -1,14 +1,16 @@
 use crate::database::subscriptions::{new_subscription_repository, SubscriptionRepository};
+use crate::services::feeds::{new_feed_service, FeedService};
 use anyhow::Result;
+use feed_rs::model::Feed;
 use serde::Serialize;
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Category {
     pub id: String,
     pub label: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Subscription {
     pub id: String,
     pub title: String,
@@ -56,10 +58,29 @@ impl Subscription {
             last_fetch_ms: 0,
         }
     }
+
+    fn from_feed(url: &str, feed: Feed) -> Subscription {
+        Subscription {
+            id: format!("feed/{}", url),
+            title: feed.title.map_or(String::new(), |t| t.content),
+            description: feed.description.map_or(String::new(), |t| t.content),
+            categories: vec![],
+            url: if feed.links.is_empty() {
+                url.to_string()
+            } else {
+                feed.links[0].href
+            },
+            feed_url: url.to_string(),
+        }
+    }
 }
 
 #[rocket::async_trait]
 pub trait SubscriptionService {
+    async fn get_subscription_from_url(&self, url: &str) -> Result<Subscription>;
+
+    async fn add_subscription_from_url(&self, user_id: &str, url: &str) -> Result<Subscription>;
+
     async fn add_subscription(&self, user_id: &str, subscription: Subscription) -> Result<()>;
 
     async fn remove_subscription(&self, user_id: &str, id: &str) -> Result<()>;
@@ -69,10 +90,22 @@ pub trait SubscriptionService {
 
 struct SubscriptionServiceImpl {
     subscription_repository: Box<dyn SubscriptionRepository + Send + Sync>,
+    feed_service: Box<dyn FeedService + Send + Sync>,
 }
 
 #[rocket::async_trait]
 impl SubscriptionService for SubscriptionServiceImpl {
+    async fn get_subscription_from_url(&self, url: &str) -> Result<Subscription> {
+        let feed = self.feed_service.get_feed(url).await?;
+        Ok(Subscription::from_feed(url, feed))
+    }
+
+    async fn add_subscription_from_url(&self, user_id: &str, url: &str) -> Result<Subscription> {
+        let subscription = self.get_subscription_from_url(url).await?;
+        self.add_subscription(user_id, subscription.clone());
+        Ok(subscription)
+    }
+
     async fn add_subscription(&self, user_id: &str, subscription: Subscription) -> Result<()> {
         self.subscription_repository
             .insert_subscription(subscription.to_db(user_id))
@@ -105,5 +138,6 @@ pub async fn new_subscription_service() -> Box<dyn SubscriptionService + Send + 
         .unwrap();
     Box::new(SubscriptionServiceImpl {
         subscription_repository: repository,
+        feed_service: new_feed_service(),
     })
 }

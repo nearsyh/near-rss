@@ -12,6 +12,8 @@ pub struct UserCreds {
 pub trait UserService {
     async fn login(&self, email: &str, password: &str) -> Result<UserCreds>;
 
+    async fn register(&self, email: &str, password: &str) -> Result<()>;
+
     async fn get_user(&self, token: &str) -> Result<User>;
 }
 
@@ -48,6 +50,11 @@ impl UserService for UserServiceImpl {
             })),
             Some(user) => Ok(user),
         }
+    }
+
+    async fn register(&self, email: &str, password: &str) -> Result<()> {
+        self.user_repository.create_user(email, password).await?;
+        Ok(())
     }
 }
 
