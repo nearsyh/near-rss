@@ -199,6 +199,9 @@ impl ItemRepositorySqlite {
 #[rocket::async_trait]
 impl ItemRepository for ItemRepositorySqlite {
     async fn get_items_by_id(&self, user_id: &str, ids: Vec<String>) -> Result<Vec<Item>> {
+        if ids.is_empty() {
+            return Ok(vec![]);
+        }
         let base_query = String::from("SELECT * FROM Items WHERE user_id = ?");
         let conditions = ids
             .iter()

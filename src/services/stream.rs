@@ -158,6 +158,9 @@ impl StreamService for StreamServiceImpl {
         user_id: &str,
         ids: Vec<String>
     ) -> Result<Vec<ItemContent>> {
+        if ids.is_empty() {
+            return Ok(vec![]);
+        }
         let items = self.item_repository.get_items_by_id(user_id, ids).await?;
         Ok(items.into_iter().map(|item| ItemContent::from(item)).collect())
     }
