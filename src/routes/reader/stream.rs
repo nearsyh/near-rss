@@ -63,8 +63,16 @@ pub async fn get_item_ids(
       .get_unread_item_ids(&user.id, page_option)
       .await
       .unwrap(),
-    FilterType::UNREAD => Page::<ItemId, String>::empty(),
-    FilterType::ALL => Page::<ItemId, String>::empty(),
+    FilterType::UNREAD => services
+      .stream_service
+      .get_unread_item_ids(&user.id, page_option)
+      .await
+      .unwrap(),
+    FilterType::ALL => services
+      .stream_service
+      .get_all_item_ids(&user.id, page_option)
+      .await
+      .unwrap(),
   };
   Json(ItemIds::from(item_ids_page))
 }
