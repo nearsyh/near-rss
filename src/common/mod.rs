@@ -7,6 +7,16 @@ pub struct PageOption<T> {
     pub desc: bool,
 }
 
+impl<T> PageOption<T> {
+    pub fn new(limit: usize, desc: bool) -> Self {
+        Self {
+            offset: None,
+            limit: limit,
+            desc: desc
+        }
+    }
+}
+
 pub struct Page<T, OT> {
     pub items: Vec<T>,
     pub next_page_offset: Option<OT>,

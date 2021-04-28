@@ -48,7 +48,7 @@ impl SubscriptionRepositorySqlite {
       feed_url TEXT NOT NULL,
       joined_categories TEXT,
       last_fetch_ms INTEGER NOT NULL,
-      RIMARY KEY (user_id, id))",
+      PRIMARY KEY (user_id, id))",
         )
         .execute(&pool)
         .await?;

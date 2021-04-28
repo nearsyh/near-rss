@@ -1,6 +1,7 @@
 use crate::common::{Page, PageOption};
 use anyhow::Result;
 use sqlx::SqlitePool;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(sqlx::FromRow, PartialEq, Eq, Debug)]
 pub struct ItemId {
@@ -9,7 +10,7 @@ pub struct ItemId {
     id: String,
 }
 
-#[derive(sqlx::FromRow, PartialEq, Eq, Debug)]
+#[derive(sqlx::FromRow, PartialEq, Eq, Debug, Clone)]
 pub struct Item {
     user_id: String,
     subscription_id: String,
@@ -32,6 +33,34 @@ impl Item {
 
     fn as_offset(&self) -> String {
         format!("{}-{}", self.created_at_ms, self.id)
+    }
+
+    fn new_item(
+        user_id: &str,
+        subscription_id: &str,
+        id: &str,
+        title: &str,
+        content: &str,
+        author: &str,
+        url: &str,
+        created_at_ms: i64,
+    ) -> Item {
+        Item {
+            user_id: user_id.to_owned(),
+            subscription_id: subscription_id.to_owned(),
+            id: id.to_owned(),
+            title: title.to_owned(),
+            content: content.to_owned(),
+            author: author.to_owned(),
+            url: url.to_owned(),
+            created_at_ms: created_at_ms,
+            fetched_at_ms: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_millis() as i64,
+            starred: false,
+            read: false,
+        }
     }
 }
 
@@ -110,7 +139,8 @@ impl ItemRepositorySqlite {
       created_at_ms INTEGER NOT NULL,
       fetched_at_ms INTEGER NOT NULL,
       starred BOOL NOT NULL,
-      read BOOL NOT NULL)",
+      read BOOL NOT NULL,
+      PRIMARY KEY (user_id, subscription_id, id))",
         )
         .execute(&pool)
         .await?;
@@ -123,7 +153,7 @@ impl ItemRepositorySqlite {
             Some(ref offset) => {
                 let (created_at_ms, id) = Item::parse_offset(offset);
                 format!(
-                    "AND created_at_ms {} {} AND id {} {}",
+                    "AND created_at_ms {} {} AND id {} \"{}\"",
                     operator, created_at_ms, operator, id
                 )
             }
@@ -132,17 +162,19 @@ impl ItemRepositorySqlite {
         let order_and_limit = format!(
             "ORDER BY created_at_ms, id {} LIMIT {}",
             if page_option.desc { "DESC" } else { "" },
-            page_option.limit
+            page_option.limit + 1
         );
         format!("{} {}", pagination, order_and_limit)
     }
 
     async fn get_items_with_query(
         &self,
-        query: &str,
+        user_id: &str,
+        query: String,
         page_option: &PageOption<String>,
     ) -> Result<Page<Item, String>> {
         let mut items = sqlx::query_as::<_, Item>(&query)
+            .bind(user_id)
             .fetch_all(&self.pool)
             .await?;
         let next_page_offset = if items.len() > page_option.limit {
@@ -166,11 +198,10 @@ impl ItemRepository for ItemRepositorySqlite {
         page_option: PageOption<String>,
     ) -> Result<Page<Item, String>> {
         let query = format!(
-            "SELECT * FROM Items WHERE user_id = {} {}",
-            user_id,
+            "SELECT * FROM Items WHERE user_id = ? {}",
             Self::build_page_query(&page_option)
         );
-        self.get_items_with_query(&query, &page_option).await
+        self.get_items_with_query(user_id, query, &page_option).await
     }
 
     async fn get_unread_items(
@@ -183,7 +214,8 @@ impl ItemRepository for ItemRepositorySqlite {
             user_id,
             Self::build_page_query(&page_option)
         );
-        self.get_items_with_query(&query, &page_option).await
+        self.get_items_with_query(user_id, query, &page_option)
+            .await
     }
 
     async fn get_starred_items(
@@ -196,31 +228,37 @@ impl ItemRepository for ItemRepositorySqlite {
             user_id,
             Self::build_page_query(&page_option)
         );
-        self.get_items_with_query(&query, &page_option).await
+        self.get_items_with_query(user_id, query, &page_option)
+            .await
     }
 
     async fn insert_items(&self, items: Vec<Item>) -> Result<()> {
-        let mut query = String::from("
+        let base = String::from("
     INSERT INTO Items 
     (user_id, subscription_id, id, title, content, author, url, created_at_ms, fetched_at_ms, starred, read)
     VALUES ");
-        for item in items {
-            query.push_str(&format!(
-                "({},{},{},{},{},{},{},{},{},{},{})",
-                item.user_id,
-                item.subscription_id,
-                item.id,
-                item.title,
-                item.content,
-                item.author,
-                item.url,
-                item.created_at_ms,
-                item.fetched_at_ms,
-                item.starred,
-                item.read
-            ));
+        let values = items
+            .iter()
+            .map(|_| "(?,?,?,?,?,?,?,?,?,?,?)")
+            .collect::<Vec<&str>>()
+            .join(",");
+        let query_str = format!("{}{}", base, values);
+        let mut query = sqlx::query(&query_str);
+        for item in items.iter() {
+            query = query
+                .bind(&item.user_id)
+                .bind(&item.subscription_id)
+                .bind(&item.id)
+                .bind(&item.title)
+                .bind(&item.content)
+                .bind(&item.author)
+                .bind(&item.url)
+                .bind(item.created_at_ms)
+                .bind(item.fetched_at_ms)
+                .bind(item.starred)
+                .bind(item.read)
         }
-        sqlx::query(&query).execute(&self.pool).await?;
+        query.execute(&self.pool).await?;
         Ok(())
     }
 
@@ -235,11 +273,11 @@ impl ItemRepository for ItemRepositorySqlite {
 
     async fn mark_as(&self, item_id: ItemId, state: State) -> Result<()> {
         let query = format!(
-            "UPDATE Items SET {} = {} WHERE user_id = ?, subscription_id = ?, id = ?",
-            state.column(),
-            state.value()
+            "UPDATE Items SET {} = ? WHERE user_id = ?, subscription_id = ?, id = ?",
+            state.column()
         );
         sqlx::query(&query)
+            .bind(state.value())
             .bind(&item_id.user_id)
             .bind(&item_id.subscription_id)
             .bind(&item_id.id)
@@ -263,5 +301,47 @@ impl ItemRepository for ItemRepositorySqlite {
             .execute(&self.pool)
             .await?;
         Ok(())
+    }
+}
+
+pub async fn new_items_repository(
+    pool: SqlitePool,
+) -> Result<Box<dyn ItemRepository + Send + Sync>> {
+    let repository = ItemRepositorySqlite::new(pool).await?;
+    Ok(Box::new(repository))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::in_memory_pool;
+    use super::*;
+
+    fn new_fake_item(id: &str, created_at_ms: i64) -> Item {
+        Item::new_item(
+            "user_id",
+            "subscription_id",
+            id,
+            "title",
+            "content",
+            "author",
+            "url",
+            created_at_ms,
+        )
+    }
+
+    #[rocket::async_test]
+    pub async fn insert_items_should_succeed() {
+        let repository = new_items_repository(in_memory_pool().await).await.unwrap();
+        let items = vec![new_fake_item("1", 1), new_fake_item("2", 2), new_fake_item("3", 3)];
+        repository
+            .insert_items(items.clone())
+            .await
+            .unwrap();
+        let fetched_items = repository
+            .get_items("user_id", PageOption::<String>::new(10, false))
+            .await
+            .unwrap()
+            .items;
+        assert_eq!(fetched_items, items);
     }
 }
