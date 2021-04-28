@@ -1,8 +1,10 @@
 use crate::common::error::Errors;
 use crate::database::subscriptions::new_subscription_repository;
 use crate::database::users::new_user_repository;
+use crate::database::items::new_items_repository;
 use crate::services::subscriptions::{new_subscription_service, SubscriptionService};
 use crate::services::users::{new_user_service, UserService};
+use crate::services::stream::{new_stream_service, StreamService};
 use async_once::AsyncOnce;
 use rocket::request::{FromRequest, Outcome, Request};
 use sqlx::SqlitePool;
@@ -10,16 +12,19 @@ use sqlx::SqlitePool;
 pub struct Services {
     pub user_service: Box<dyn UserService + Send + Sync>,
     pub subscription_service: Box<dyn SubscriptionService + Send + Sync>,
+    pub stream_service: Box<dyn StreamService + Send + Sync>,
 }
 
 impl Services {
     async fn new(pool: SqlitePool) -> Services {
         let user_repository = new_user_repository(pool.clone()).await.unwrap();
         let subscription_repository = new_subscription_repository(pool.clone()).await.unwrap();
+        let item_repository = new_items_repository(pool.clone()).await.unwrap();
 
         Services {
             user_service: new_user_service(user_repository),
             subscription_service: new_subscription_service(subscription_repository),
+            stream_service: new_stream_service(item_repository),
         }
     }
 }

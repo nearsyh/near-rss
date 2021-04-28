@@ -1,6 +1,6 @@
 use crate::common::{Page, PageOption};
 use crate::database::items::ItemRepository;
-use super::feeds::FeedService;
+use super::feeds::{new_feed_service, FeedService};
 use serde::Serialize;
 use anyhow::Result;
 
@@ -51,4 +51,13 @@ impl StreamService for StreamServiceImpl {
             next_page_offset: page.next_page_offset,
         })
     }
+}
+
+pub fn new_stream_service(
+    repository: Box<dyn ItemRepository + Send + Sync>,
+) -> Box<dyn StreamService + Send + Sync> {
+    Box::new(StreamServiceImpl {
+        item_repository: repository,
+        feed_service: new_feed_service(),
+    })
 }

@@ -22,6 +22,15 @@ pub struct Page<T, OT> {
     pub next_page_offset: Option<OT>,
 }
 
+impl<T, OT> Page<T, OT> {
+    pub fn empty() -> Self {
+        Self {
+            items: vec![],
+            next_page_offset: None
+        }
+    }
+}
+
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use std::iter;
