@@ -251,7 +251,10 @@ impl ItemRepository for ItemRepositorySqlite {
             .map(|_| "(?,?,?,?,?,?,?,?,?,?,?)")
             .collect::<Vec<&str>>()
             .join(",");
-        let query_str = format!("{}{}", base, values);
+        let query_str = format!(
+            "{}{} ON CONFLICT(user_id, subscription_id, id) DO NOTHING",
+            base, values
+        );
         let mut query = sqlx::query(&query_str);
         for item in items.iter() {
             query = query
@@ -353,6 +356,42 @@ mod tests {
             .unwrap()
             .items;
         assert_eq!(fetched_items, items);
+    }
+
+    #[rocket::async_test]
+    pub async fn insert_same_items_should_do_nothing() {
+        let repository = new_items_repository(in_memory_pool().await).await.unwrap();
+        let items = vec![new_fake_item("1", 1), new_fake_item("2", 2)];
+        repository.insert_items(items.clone()).await.unwrap();
+        // Insert same items again.
+        repository
+            .insert_items(vec![new_fake_item("1", 1), new_fake_item("3", 3)])
+            .await
+            .unwrap();
+        assert_eq!(
+            repository
+                .get_items("user_id", PageOption::<String>::new(10, false))
+                .await
+                .unwrap()
+                .items
+                .len(),
+            3
+        );
+
+        repository
+            .mark_as(items[0].key(), State::READ)
+            .await
+            .unwrap();
+        repository
+            .insert_items(vec![new_fake_item("1", 1), new_fake_item("3", 3)])
+            .await
+            .unwrap();
+        let item = &repository
+            .get_items("user_id", PageOption::<String>::new(10, false))
+            .await
+            .unwrap()
+            .items[0];
+        assert!(item.read);
     }
 
     #[rocket::async_test]
