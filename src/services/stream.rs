@@ -1,4 +1,3 @@
-use super::feeds::{new_feed_service, FeedService};
 use crate::common::{Page, PageOption};
 use crate::database::items::ItemRepository;
 use anyhow::Result;
@@ -45,7 +44,6 @@ pub trait StreamService {
 
 struct StreamServiceImpl {
     item_repository: Box<dyn ItemRepository + Send + Sync>,
-    feed_service: Box<dyn FeedService + Send + Sync>,
 }
 
 #[rocket::async_trait]
@@ -89,6 +87,5 @@ pub fn new_stream_service(
 ) -> Box<dyn StreamService + Send + Sync> {
     Box::new(StreamServiceImpl {
         item_repository: repository,
-        feed_service: new_feed_service(),
     })
 }

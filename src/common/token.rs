@@ -1,8 +1,8 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use crate::common::current_time_s;
 
 pub struct Token {
     pub id: String,
-    pub expire_at: u64,
+    pub expire_at: i64,
     pub sid: String,
 }
 
@@ -10,11 +10,7 @@ impl Token {
     pub fn new(id: &str) -> Token {
         Token {
             id: id.to_string(),
-            expire_at: SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
-                + 14 * 24 * 60 * 60,
+            expire_at: current_time_s() + 14 * 24 * 60 * 60,
             sid: super::new_id(20),
         }
     }
@@ -28,7 +24,7 @@ impl Token {
         if parts.len() != 3 {
             return None;
         }
-        match parts[1].parse::<u64>() {
+        match parts[1].parse::<i64>() {
             Err(_) => None,
             Ok(expire_at) => Some(Token {
                 id: parts[2].to_string(),

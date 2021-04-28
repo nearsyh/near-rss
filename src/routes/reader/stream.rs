@@ -57,6 +57,11 @@ pub async fn get_item_ids(
     limit: n.unwrap_or(100usize),
     desc: !r.unwrap_or("").eq("o"),
   };
+  services
+    .subscription_service
+    .load_subscription_items(&user.id)
+    .await
+    .unwrap();
   let item_ids_page = match FilterType::from_params(s, xt) {
     FilterType::STARRED => services
       .stream_service

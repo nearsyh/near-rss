@@ -1,7 +1,6 @@
-use crate::common::{Page, PageOption};
+use crate::common::{Page, PageOption, current_time_ms};
 use anyhow::Result;
 use sqlx::SqlitePool;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(sqlx::FromRow, PartialEq, Eq, Debug)]
 pub struct ItemId {
@@ -43,7 +42,7 @@ impl Item {
         }
     }
 
-    fn new_item(
+    pub fn new_item(
         user_id: &str,
         subscription_id: &str,
         id: &str,
@@ -62,10 +61,7 @@ impl Item {
             author: author.to_owned(),
             url: url.to_owned(),
             created_at_ms: created_at_ms,
-            fetched_at_ms: SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_millis() as i64,
+            fetched_at_ms: current_time_ms(),
             starred: false,
             read: false,
         }
@@ -316,7 +312,7 @@ impl ItemRepository for ItemRepositorySqlite {
     }
 }
 
-pub async fn new_items_repository(
+pub async fn new_item_repository(
     pool: SqlitePool,
 ) -> Result<Box<dyn ItemRepository + Send + Sync>> {
     let repository = ItemRepositorySqlite::new(pool).await?;

@@ -1,3 +1,5 @@
+use crate::common::current_time_ms;
+use crate::database::items::{Item, ItemRepository};
 use crate::database::subscriptions::SubscriptionRepository;
 use crate::services::feeds::{new_feed_service, FeedService};
 use anyhow::Result;
@@ -87,11 +89,42 @@ pub trait SubscriptionService {
     async fn remove_subscription(&self, user_id: &str, id: &str) -> Result<()>;
 
     async fn list_subscriptions(&self, user_id: &str) -> Result<Vec<Subscription>>;
+
+    async fn load_subscription_items(&self, user_id: &str) -> Result<()>;
 }
 
 struct SubscriptionServiceImpl {
     subscription_repository: Box<dyn SubscriptionRepository + Send + Sync>,
+    item_repository: Box<dyn ItemRepository + Send + Sync>,
     feed_service: Box<dyn FeedService + Send + Sync>,
+}
+
+fn extract_items_from_feed(user_id: &str, subscription_id: &str, feed: &Feed) -> Vec<Item> {
+    feed.entries
+        .iter()
+        .map(|entry| {
+            Item::new_item(
+                user_id,
+                subscription_id,
+                &entry.id,
+                &entry.title.as_ref().map_or("", |t| &t.content),
+                &entry
+                    .content
+                    .as_ref()
+                    .map_or("", |t| t.body.as_deref().unwrap_or("")),
+                &entry
+                    .authors
+                    .iter()
+                    .map(|p| -> &str { &p.name })
+                    .collect::<Vec<&str>>()
+                    .join(","),
+                &entry.links[0].href,
+                entry
+                    .published
+                    .map_or(current_time_ms(), |d| d.timestamp_millis()),
+            )
+        })
+        .collect()
 }
 
 #[rocket::async_trait]
@@ -131,13 +164,39 @@ impl SubscriptionService for SubscriptionServiceImpl {
             .map(|sub| Subscription::from(sub))
             .collect());
     }
+
+    async fn load_subscription_items(&self, user_id: &str) -> Result<()> {
+        let subscriptions = self
+            .subscription_repository
+            .list_user_subscriptions(user_id)
+            .await?;
+        let urls = subscriptions
+            .iter()
+            .map(|sub| -> &str { &sub.feed_url })
+            .collect::<Vec<&str>>();
+        let feeds = self.feed_service.get_feeds(urls).await;
+        for subscription in subscriptions {
+            let url = &subscription.feed_url;
+            match feeds.get(url) {
+                Some(Ok(feed)) => {
+                    self.item_repository
+                        .insert_items(extract_items_from_feed(user_id, &subscription.id, feed))
+                        .await?;
+                }
+                _ => continue,
+            };
+        }
+        Ok(())
+    }
 }
 
 pub fn new_subscription_service(
-    repository: Box<dyn SubscriptionRepository + Send + Sync>,
+    subscription_repository: Box<dyn SubscriptionRepository + Send + Sync>,
+    item_repository: Box<dyn ItemRepository + Send + Sync>,
 ) -> Box<dyn SubscriptionService + Send + Sync> {
     Box::new(SubscriptionServiceImpl {
-        subscription_repository: repository,
+        subscription_repository: subscription_repository,
+        item_repository: item_repository,
         feed_service: new_feed_service(),
     })
 }

@@ -1,6 +1,8 @@
 pub mod error;
 pub mod token;
 
+use std::time::{SystemTime, UNIX_EPOCH};
+
 pub struct PageOption<T> {
     pub offset: Option<T>,
     pub limit: usize,
@@ -51,4 +53,18 @@ pub fn new_id(length: usize) -> String {
         .map(char::from)
         .take(length)
         .collect()
+}
+
+pub fn current_time_ms() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as i64
+}
+
+pub fn current_time_s() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64
 }
