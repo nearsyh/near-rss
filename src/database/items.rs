@@ -12,17 +12,17 @@ pub struct ItemId {
 
 #[derive(sqlx::FromRow, PartialEq, Eq, Debug, Clone)]
 pub struct Item {
-    user_id: String,
-    subscription_id: String,
-    id: String,
-    title: String,
-    content: String,
-    author: String,
-    url: String,
-    created_at_ms: i64,
-    fetched_at_ms: i64,
-    starred: bool,
-    read: bool,
+    pub user_id: String,
+    pub subscription_id: String,
+    pub id: String,
+    pub title: String,
+    pub content: String,
+    pub author: String,
+    pub url: String,
+    pub created_at_ms: i64,
+    pub fetched_at_ms: i64,
+    pub starred: bool,
+    pub read: bool,
 }
 
 impl Item {

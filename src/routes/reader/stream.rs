@@ -1,22 +1,24 @@
-use crate::common::PageOption;
+use crate::common::{PageOption, Page};
 use crate::middlewares::auth::AuthUser;
 use crate::middlewares::di::Services;
+use crate::services::stream::ItemId;
 use rocket_contrib::json::Json;
 use serde::Serialize;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Item {
-    pub id: i64,
-    pub direct_stream_ids: Vec<String>,
-    pub timestamp_usec: i64,
+pub struct ItemIds {
+    pub item_refs: Vec<ItemId>,
+    pub continuation: Option<String>,
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Items {
-    pub item_refs: Vec<Item>,
-    pub continuation: String,
+impl From<Page<ItemId, String>> for ItemIds {
+    fn from(page: Page<ItemId, String>) -> ItemIds {
+        ItemIds {
+            item_refs: page.items,
+            continuation: page.next_page_offset,
+        }
+    }
 }
 
 enum FilterType {
@@ -48,7 +50,7 @@ pub async fn get_item_ids(
     n: Option<usize>,
     r: Option<&str>,
     c: Option<&str>,
-) -> Json<Vec<Item>> {
+) -> Json<ItemIds> {
     let _page_option = PageOption::<String> {
         offset: c.map(|s| String::from(s)),
         limit: n.unwrap_or(100usize),
