@@ -12,7 +12,7 @@ impl<T> PageOption<T> {
         Self {
             offset: None,
             limit: limit,
-            desc: desc
+            desc: desc,
         }
     }
 }
@@ -26,7 +26,17 @@ impl<T, OT> Page<T, OT> {
     pub fn empty() -> Self {
         Self {
             items: vec![],
-            next_page_offset: None
+            next_page_offset: None,
+        }
+    }
+
+    pub fn convert<R, F>(self, f: F) -> Page<R, OT>
+    where
+        F: FnMut(T) -> R,
+    {
+        Page::<R, OT> {
+            items: self.items.into_iter().map(f).collect::<Vec<R>>(),
+            next_page_offset: self.next_page_offset,
         }
     }
 }

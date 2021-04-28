@@ -1,15 +1,15 @@
+use super::feeds::{new_feed_service, FeedService};
 use crate::common::{Page, PageOption};
 use crate::database::items::ItemRepository;
-use super::feeds::{new_feed_service, FeedService};
-use serde::Serialize;
 use anyhow::Result;
+use serde::Serialize;
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemId {
     id: String,
     direct_stream_ids: Vec<String>,
-    timestamp_usec: i64
+    timestamp_usec: i64,
 }
 
 impl From<crate::database::items::Item> for ItemId {
@@ -17,7 +17,7 @@ impl From<crate::database::items::Item> for ItemId {
         ItemId {
             id: item.id,
             direct_stream_ids: vec![],
-            timestamp_usec: item.created_at_ms * 1000
+            timestamp_usec: item.created_at_ms * 1000,
         }
     }
 }
@@ -25,6 +25,18 @@ impl From<crate::database::items::Item> for ItemId {
 #[rocket::async_trait]
 pub trait StreamService {
     async fn get_unread_item_ids(
+        &self,
+        user_id: &str,
+        page_option: PageOption<String>,
+    ) -> Result<Page<ItemId, String>>;
+
+    async fn get_starred_item_ids(
+        &self,
+        user_id: &str,
+        page_option: PageOption<String>,
+    ) -> Result<Page<ItemId, String>>;
+
+    async fn get_all_item_ids(
         &self,
         user_id: &str,
         page_option: PageOption<String>,
@@ -44,12 +56,31 @@ impl StreamService for StreamServiceImpl {
         page_option: PageOption<String>,
     ) -> Result<Page<ItemId, String>> {
         let page = self.item_repository.get_items(user_id, page_option).await?;
-        Ok(Page::<ItemId, String> {
-            items: page.items.into_iter().map(|item| {
-                ItemId::from(item)
-            }).collect(),
-            next_page_offset: page.next_page_offset,
-        })
+        Ok(page.convert::<ItemId, _>(|item| ItemId::from(item)))
+    }
+
+    async fn get_starred_item_ids(
+        &self,
+        user_id: &str,
+        page_option: PageOption<String>,
+    ) -> Result<Page<ItemId, String>> {
+        let page = self
+            .item_repository
+            .get_starred_items(user_id, page_option)
+            .await?;
+        Ok(page.convert::<ItemId, _>(|item| ItemId::from(item)))
+    }
+
+    async fn get_all_item_ids(
+        &self,
+        user_id: &str,
+        page_option: PageOption<String>,
+    ) -> Result<Page<ItemId, String>> {
+        let page = self
+            .item_repository
+            .get_items(user_id, page_option)
+            .await?;
+        Ok(page.convert::<ItemId, _>(|item| ItemId::from(item)))
     }
 }
 
