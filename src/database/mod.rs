@@ -1,3 +1,4 @@
+pub mod items;
 pub mod subscriptions;
 pub mod users;
 
