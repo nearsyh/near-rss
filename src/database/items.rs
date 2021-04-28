@@ -35,6 +35,14 @@ impl Item {
         format!("{}-{}", self.created_at_ms, self.id)
     }
 
+    fn key(&self) -> ItemId {
+        ItemId {
+            user_id: self.user_id.clone(),
+            subscription_id: self.subscription_id.clone(),
+            id: self.id.clone(),
+        }
+    }
+
     fn new_item(
         user_id: &str,
         subscription_id: &str,
@@ -82,7 +90,7 @@ impl State {
     fn value(&self) -> bool {
         match self {
             Self::STARRED | Self::READ => true,
-            Self::UNSTARRED | Self::UNREAD => true,
+            Self::UNSTARRED | Self::UNREAD => false,
         }
     }
 }
@@ -201,7 +209,8 @@ impl ItemRepository for ItemRepositorySqlite {
             "SELECT * FROM Items WHERE user_id = ? {}",
             Self::build_page_query(&page_option)
         );
-        self.get_items_with_query(user_id, query, &page_option).await
+        self.get_items_with_query(user_id, query, &page_option)
+            .await
     }
 
     async fn get_unread_items(
@@ -273,7 +282,7 @@ impl ItemRepository for ItemRepositorySqlite {
 
     async fn mark_as(&self, item_id: ItemId, state: State) -> Result<()> {
         let query = format!(
-            "UPDATE Items SET {} = ? WHERE user_id = ?, subscription_id = ?, id = ?",
+            "UPDATE Items SET {} = ? WHERE user_id = ? AND subscription_id = ? AND id = ?",
             state.column()
         );
         sqlx::query(&query)
@@ -332,16 +341,127 @@ mod tests {
     #[rocket::async_test]
     pub async fn insert_items_should_succeed() {
         let repository = new_items_repository(in_memory_pool().await).await.unwrap();
-        let items = vec![new_fake_item("1", 1), new_fake_item("2", 2), new_fake_item("3", 3)];
-        repository
-            .insert_items(items.clone())
-            .await
-            .unwrap();
+        let items = vec![
+            new_fake_item("1", 1),
+            new_fake_item("2", 2),
+            new_fake_item("3", 3),
+        ];
+        repository.insert_items(items.clone()).await.unwrap();
         let fetched_items = repository
             .get_items("user_id", PageOption::<String>::new(10, false))
             .await
             .unwrap()
             .items;
         assert_eq!(fetched_items, items);
+    }
+
+    #[rocket::async_test]
+    pub async fn mark_all_as_read_should_succeed() {
+        let repository = new_items_repository(in_memory_pool().await).await.unwrap();
+        let items = vec![
+            new_fake_item("1", 1),
+            new_fake_item("2", 2),
+            new_fake_item("3", 3),
+        ];
+        repository.insert_items(items.clone()).await.unwrap();
+        repository.mark_all_as_read("user_id").await.unwrap();
+        assert!(repository
+            .get_unread_items("user_id", PageOption::<String>::new(10, false))
+            .await
+            .unwrap()
+            .items
+            .is_empty());
+    }
+
+    #[rocket::async_test]
+    pub async fn mark_older_as_read_should_succeed() {
+        let repository = new_items_repository(in_memory_pool().await).await.unwrap();
+        let items = vec![
+            new_fake_item("1", 1),
+            new_fake_item("2", 2),
+            new_fake_item("3", 3),
+        ];
+        repository.insert_items(items.clone()).await.unwrap();
+        repository.mark_older_as_read("user_id", 1).await.unwrap();
+        assert_eq!(
+            repository
+                .get_unread_items("user_id", PageOption::<String>::new(10, false))
+                .await
+                .unwrap()
+                .items,
+            &items[1..]
+        );
+        repository.mark_older_as_read("user_id", 3).await.unwrap();
+        assert!(repository
+            .get_unread_items("user_id", PageOption::<String>::new(10, false))
+            .await
+            .unwrap()
+            .items
+            .is_empty());
+    }
+
+    #[rocket::async_test]
+    pub async fn mark_item_should_succeed() {
+        let repository = new_items_repository(in_memory_pool().await).await.unwrap();
+        let items = vec![
+            new_fake_item("1", 1),
+            new_fake_item("2", 2),
+            new_fake_item("3", 3),
+        ];
+        repository.insert_items(items.clone()).await.unwrap();
+        repository
+            .mark_as(items[0].key(), State::STARRED)
+            .await
+            .unwrap();
+        assert_eq!(
+            repository
+                .get_starred_items("user_id", PageOption::<String>::new(10, false))
+                .await
+                .unwrap()
+                .items,
+            items[0..1]
+                .iter()
+                .map(|item| {
+                    let mut ret = item.clone();
+                    ret.starred = true;
+                    ret
+                })
+                .collect::<Vec<Item>>()
+        );
+        repository
+            .mark_as(items[0].key(), State::UNSTARRED)
+            .await
+            .unwrap();
+        assert!(repository
+            .get_starred_items("user_id", PageOption::<String>::new(10, false))
+            .await
+            .unwrap()
+            .items
+            .is_empty());
+
+        repository
+            .mark_as(items[2].key(), State::READ)
+            .await
+            .unwrap();
+        assert_eq!(
+            repository
+                .get_unread_items("user_id", PageOption::<String>::new(10, false))
+                .await
+                .unwrap()
+                .items,
+            &items[0..2]
+        );
+        repository
+            .mark_as(items[2].key(), State::UNREAD)
+            .await
+            .unwrap();
+        assert_eq!(
+            repository
+                .get_unread_items("user_id", PageOption::<String>::new(10, false))
+                .await
+                .unwrap()
+                .items,
+            items
+        );
     }
 }
