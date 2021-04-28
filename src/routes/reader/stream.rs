@@ -1,7 +1,7 @@
-use crate::common::{Page, PageOption};
+use crate::common::{current_time_s, Page, PageOption};
 use crate::middlewares::auth::AuthUser;
 use crate::middlewares::di::Services;
-use crate::services::stream::ItemId;
+use crate::services::stream::{ItemId, ItemContent};
 use rocket_contrib::json::Json;
 use serde::Serialize;
 
@@ -89,20 +89,27 @@ pub struct Contents {
   title: String,
   description: String,
   updated: u64,
-  items: Vec<Content>,
+  items: Vec<ItemContent>,
 }
 
-#[derive(Serialize)]
-pub struct Content {}
-
-#[get("/api/0/stream/contents")]
-pub async fn get_contents() -> Json<Contents> {
+#[get("/api/0/stream/contents?<i>")]
+pub async fn get_contents(
+  auth_user: AuthUser,
+  services: &Services,
+  i: Vec<String>,
+) -> Json<Contents> {
+  let user = auth_user.user;
+  let item_contents = services
+    .stream_service
+    .get_item_contents(&user.id, i)
+    .await
+    .unwrap();
   Json(Contents {
     direction: "ltr".to_string(),
     id: "id".to_string(),
     title: "Reading List".to_string(),
     description: "Reading List".to_string(),
-    updated: 1619362681,
-    items: vec![],
+    updated: current_time_s() as u64,
+    items: item_contents,
   })
 }

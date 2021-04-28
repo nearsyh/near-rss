@@ -1,4 +1,4 @@
-use crate::common::{Page, PageOption, current_time_ms};
+use crate::common::{current_time_ms, Page, PageOption};
 use anyhow::Result;
 use sqlx::SqlitePool;
 
@@ -93,6 +93,8 @@ impl State {
 
 #[rocket::async_trait]
 pub trait ItemRepository {
+    async fn get_items_by_id(&self, user_id: &str, ids: Vec<String>) -> Result<Vec<Item>>;
+
     async fn get_items(
         &self,
         user_id: &str,
@@ -196,6 +198,21 @@ impl ItemRepositorySqlite {
 
 #[rocket::async_trait]
 impl ItemRepository for ItemRepositorySqlite {
+    async fn get_items_by_id(&self, user_id: &str, ids: Vec<String>) -> Result<Vec<Item>> {
+        let base_query = String::from("SELECT * FROM Items WHERE user_id = ?");
+        let conditions = ids
+            .iter()
+            .map(|_| " id = ? ")
+            .collect::<Vec<&str>>()
+            .join("AND");
+        let query_str = format!("{} AND {}", base_query, conditions);
+        let mut query = sqlx::query_as::<_, Item>(&query_str).bind(user_id);
+        for id in ids {
+            query = query.bind(id);
+        }
+        Ok(query.fetch_all(&self.pool).await?)
+    }
+
     async fn get_items(
         &self,
         user_id: &str,
