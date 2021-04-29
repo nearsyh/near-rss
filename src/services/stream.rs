@@ -6,9 +6,9 @@ use serde::Serialize;
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemId {
-    id: String,
-    direct_stream_ids: Vec<String>,
-    timestamp_usec: i64,
+    pub id: String,
+    pub direct_stream_ids: Vec<String>,
+    pub timestamp_usec: i64,
 }
 
 impl From<Item> for ItemId {
@@ -125,7 +125,7 @@ impl StreamService for StreamServiceImpl {
         user_id: &str,
         page_option: PageOption<String>,
     ) -> Result<Page<ItemId, String>> {
-        let page = self.item_repository.get_items(user_id, page_option).await?;
+        let page = self.item_repository.get_unread_items(user_id, page_option).await?;
         Ok(page.convert::<ItemId, _>(|item| ItemId::from(item)))
     }
 

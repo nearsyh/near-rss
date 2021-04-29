@@ -65,7 +65,7 @@ pub async fn get_item_ids(
   let item_ids_page = match FilterType::from_params(s, xt) {
     FilterType::STARRED => services
       .stream_service
-      .get_unread_item_ids(&user.id, page_option)
+      .get_starred_item_ids(&user.id, page_option)
       .await
       .unwrap(),
     FilterType::UNREAD => services
@@ -92,16 +92,16 @@ pub struct Contents {
   items: Vec<ItemContent>,
 }
 
-#[get("/api/0/stream/contents?<i>")]
+#[post("/api/0/stream/items/contents?<i>")]
 pub async fn get_contents(
   auth_user: AuthUser,
   services: &Services,
-  i: Vec<String>,
+  i: Option<Vec<String>>,
 ) -> Json<Contents> {
   let user = auth_user.user;
   let item_contents = services
     .stream_service
-    .get_item_contents(&user.id, i)
+    .get_item_contents(&user.id, i.unwrap_or(vec![]))
     .await
     .unwrap();
   Json(Contents {

@@ -235,8 +235,7 @@ impl ItemRepository for ItemRepositorySqlite {
         page_option: PageOption<String>,
     ) -> Result<Page<Item, String>> {
         let query = format!(
-            "SELECT * FROM Items WHERE user_id = {} AND read = false {}",
-            user_id,
+            "SELECT * FROM Items WHERE user_id = ? AND read = false {}",
             Self::build_page_query(&page_option)
         );
         self.get_items_with_query(user_id, query, &page_option)
@@ -249,8 +248,7 @@ impl ItemRepository for ItemRepositorySqlite {
         page_option: PageOption<String>,
     ) -> Result<Page<Item, String>> {
         let query = format!(
-            "SELECT * FROM Items WHERE user_id = {} AND starred = true {}",
-            user_id,
+            "SELECT * FROM Items WHERE user_id = ? AND starred = true {}",
             Self::build_page_query(&page_option)
         );
         self.get_items_with_query(user_id, query, &page_option)

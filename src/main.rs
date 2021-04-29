@@ -25,6 +25,7 @@ async fn rocket() -> _ {
                 routes::reader::subscriptions::list_subscriptions,
                 routes::reader::subscriptions::add_subscription,
                 routes::reader::users::get_user_info,
+                routes::reader::users::token,
                 routes::reader::stream::get_item_ids,
                 routes::reader::stream::get_contents,
             ],

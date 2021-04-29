@@ -27,3 +27,8 @@ pub async fn get_user_info(auth_user: AuthUser) -> Json<UserInfo> {
         is_multi_login_enabled: true,
     })
 }
+
+#[get("/api/0/token")]
+pub async fn token(auth_user: AuthUser) -> String {
+    auth_user.user.token
+}
