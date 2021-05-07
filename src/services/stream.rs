@@ -111,7 +111,7 @@ pub trait StreamService {
         page_option: PageOption<String>,
     ) -> Result<Page<ItemId, String>>;
 
-    async fn get_item_contents(&self, user_id: &str, ids: Vec<String>) -> Result<Vec<ItemContent>>;
+    async fn get_item_contents(&self, user_id: &str, ids: &Vec<&str>) -> Result<Vec<ItemContent>>;
 }
 
 struct StreamServiceImpl {
@@ -165,7 +165,7 @@ impl StreamService for StreamServiceImpl {
         Ok(page.convert::<ItemId, _>(|item| ItemId::from(item)))
     }
 
-    async fn get_item_contents(&self, user_id: &str, ids: Vec<String>) -> Result<Vec<ItemContent>> {
+    async fn get_item_contents(&self, user_id: &str, ids: &Vec<&str>) -> Result<Vec<ItemContent>> {
         if ids.is_empty() {
             return Ok(vec![]);
         }

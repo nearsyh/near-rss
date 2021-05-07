@@ -1,7 +1,8 @@
+use crate::common::Services;
 use crate::common::{current_time_s, Page, PageOption};
 use crate::middlewares::auth::AuthUser;
-use crate::common::Services;
 use crate::services::stream::{ItemContent, ItemId};
+use rocket::form::Form;
 use rocket_contrib::json::Json;
 use serde::Serialize;
 
@@ -100,18 +101,26 @@ pub struct Contents {
     items: Vec<ItemContent>,
 }
 
-#[post("/api/0/stream/items/contents?<i>")]
+#[derive(FromForm)]
+pub struct Ids<'r> {
+   pub i: Option<Vec<&'r str>>,
+}
+
+#[post("/api/0/stream/items/contents", data = "<ids>")]
 pub async fn get_contents(
     auth_user: AuthUser,
     services: &Services,
-    i: Option<Vec<String>>,
+    ids: Form<Ids<'_>>,
 ) -> Json<Contents> {
     let user = auth_user.user;
-    let item_contents = services
-        .stream_service
-        .get_item_contents(&user.id, i.unwrap_or(vec![]))
-        .await
-        .unwrap();
+    let item_contents = match ids.i {
+        Some(ref i) => services
+            .stream_service
+            .get_item_contents(&user.id, i)
+            .await
+            .unwrap(),
+        None => vec![],
+    };
     Json(Contents {
         direction: "ltr".to_string(),
         id: "id".to_string(),

@@ -108,7 +108,7 @@ impl State {
 
 #[rocket::async_trait]
 pub trait ItemRepository {
-    async fn get_items_by_id(&self, user_id: &str, ids: Vec<String>) -> Result<Vec<Item>>;
+    async fn get_items_by_id(&self, user_id: &str, ids: &Vec<&str>) -> Result<Vec<Item>>;
 
     async fn get_items(
         &self,
@@ -220,7 +220,7 @@ impl ItemRepositorySqlite {
 
 #[rocket::async_trait]
 impl ItemRepository for ItemRepositorySqlite {
-    async fn get_items_by_id(&self, user_id: &str, ids: Vec<String>) -> Result<Vec<Item>> {
+    async fn get_items_by_id(&self, user_id: &str, ids: &Vec<&str>) -> Result<Vec<Item>> {
         if ids.is_empty() {
             return Ok(vec![]);
         }
@@ -229,13 +229,16 @@ impl ItemRepository for ItemRepositorySqlite {
             .iter()
             .map(|_| " id = ? ")
             .collect::<Vec<&str>>()
-            .join("AND");
-        let query_str = format!("{} AND {}", base_query, conditions);
+            .join("OR");
+        let query_str = format!("{} AND ({})", base_query, conditions);
         let mut query = sqlx::query_as::<_, Item>(&query_str).bind(user_id);
         for id in ids {
             query = match id.parse::<i64>() {
                 Ok(id_num) => query.bind(id_num),
-                Err(_) => query,
+                Err(_) => match i64::from_str_radix(id, 16) {
+                    Ok(id_num) => query.bind(id_num),
+                    Err(_) => query.bind(-1),
+                }
             };
         }
         Ok(query.fetch_all(&self.pool).await?)
