@@ -11,11 +11,8 @@ mod middlewares;
 mod routes;
 mod services;
 
-async fn init() {}
-
 #[launch]
 async fn rocket() -> _ {
-    init().await;
     rocket::build()
         .mount("/accounts", routes![routes::accounts::client_login])
         .mount(

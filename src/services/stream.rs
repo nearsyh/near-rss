@@ -8,7 +8,7 @@ use serde::Serialize;
 pub struct ItemId {
     pub id: String,
     pub direct_stream_ids: Vec<String>,
-    pub timestamp_usec: i64,
+    pub timestamp_usec: String,
 }
 
 impl From<Item> for ItemId {
@@ -16,7 +16,7 @@ impl From<Item> for ItemId {
         ItemId {
             id: item.id.to_string(),
             direct_stream_ids: vec![],
-            timestamp_usec: item.created_at_ms * 1000,
+            timestamp_usec: (item.created_at_ms * 1000).to_string(),
         }
     }
 }

@@ -1,7 +1,11 @@
 pub mod error;
 pub mod token;
+pub mod debug;
 
 use std::time::{SystemTime, UNIX_EPOCH};
+use crate::services::stream::{StreamService};
+use crate::services::subscriptions::{SubscriptionService};
+use crate::services::users::{UserService};
 
 pub struct PageOption<T> {
     pub offset: Option<T>,
@@ -68,3 +72,9 @@ pub fn current_time_s() -> i64 {
         .unwrap()
         .as_secs() as i64
 }
+
+pub struct Services {
+    pub user_service: Box<dyn UserService + Send + Sync>,
+    pub subscription_service: Box<dyn SubscriptionService + Send + Sync>,
+    pub stream_service: Box<dyn StreamService + Send + Sync>,
+  }

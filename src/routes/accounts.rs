@@ -1,4 +1,4 @@
-use crate::middlewares::di::Services;
+use crate::common::Services;
 use rocket::form::Form;
 use rocket::response::status::Forbidden;
 

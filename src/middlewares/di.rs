@@ -1,19 +1,13 @@
-use crate::common::error::Errors;
+use crate::common::{Services, debug::is_debug, debug::init_data, error::Errors};
 use crate::database::items::new_item_repository;
 use crate::database::subscriptions::new_subscription_repository;
 use crate::database::users::new_user_repository;
-use crate::services::stream::{new_stream_service, StreamService};
-use crate::services::subscriptions::{new_subscription_service, SubscriptionService};
-use crate::services::users::{new_user_service, UserService};
+use crate::services::stream::new_stream_service;
+use crate::services::subscriptions::new_subscription_service;
+use crate::services::users::new_user_service;
 use async_once::AsyncOnce;
 use rocket::request::{FromRequest, Outcome, Request};
 use sqlx::SqlitePool;
-
-pub struct Services {
-  pub user_service: Box<dyn UserService + Send + Sync>,
-  pub subscription_service: Box<dyn SubscriptionService + Send + Sync>,
-  pub stream_service: Box<dyn StreamService + Send + Sync>,
-}
 
 impl Services {
   async fn new(pool: SqlitePool) -> Services {
@@ -35,16 +29,9 @@ lazy_static! {
   pub static ref SERVICES: AsyncOnce<Services> = AsyncOnce::new(async {
     let pool = crate::database::in_memory_pool().await;
     let ret = Services::new(pool).await;
-    let user = ret
-      .user_service
-      .register("nearsy.h@gmail.com", "1234")
-      .await
-      .unwrap();
-    ret
-      .subscription_service
-      .add_subscription_from_url(&user.id, "https://www.daemonology.net/hn-daily/index.rss")
-      .await
-      .unwrap();
+    if is_debug() {
+      init_data(&ret).await;
+    }
     ret
   });
 }
