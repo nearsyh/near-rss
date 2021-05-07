@@ -928,6 +928,7 @@ dependencies = [
  "feed-rs",
  "futures",
  "lazy_static",
+ "log",
  "rand 0.8.3",
  "reqwest",
  "rocket",
