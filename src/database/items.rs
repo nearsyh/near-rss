@@ -6,14 +6,15 @@ use sqlx::SqlitePool;
 pub struct ItemId {
     user_id: String,
     subscription_id: String,
-    id: String,
+    id: i64,
 }
 
-#[derive(sqlx::FromRow, PartialEq, Eq, Debug, Clone)]
+#[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Item {
     pub user_id: String,
     pub subscription_id: String,
-    pub id: String,
+    pub external_id: String,
+    pub id: i64,
     pub title: String,
     pub content: String,
     pub author: String,
@@ -24,10 +25,23 @@ pub struct Item {
     pub read: bool,
 }
 
+impl PartialEq for Item {
+    fn eq(&self, other: &Self) -> bool {
+        return self.subscription_id == other.subscription_id
+            && self.external_id == other.external_id
+            && self.user_id == other.user_id;
+    }
+}
+
+impl Eq for Item {}
+
 impl Item {
-    fn parse_offset(offset: &str) -> (i64, &str) {
+    fn parse_offset(offset: &str) -> (i64, i64) {
         let parts: Vec<&str> = offset.split("-").collect();
-        (parts[0].parse::<i64>().unwrap(), parts[1])
+        (
+            parts[0].parse::<i64>().unwrap(),
+            parts[1].parse::<i64>().unwrap(),
+        )
     }
 
     fn as_offset(&self) -> String {
@@ -38,14 +52,14 @@ impl Item {
         ItemId {
             user_id: self.user_id.clone(),
             subscription_id: self.subscription_id.clone(),
-            id: self.id.clone(),
+            id: self.id,
         }
     }
 
     pub fn new_item(
         user_id: &str,
         subscription_id: &str,
-        id: &str,
+        external_id: &str,
         title: &str,
         content: &str,
         author: &str,
@@ -55,7 +69,8 @@ impl Item {
         Item {
             user_id: user_id.to_owned(),
             subscription_id: subscription_id.to_owned(),
-            id: id.to_owned(),
+            external_id: external_id.to_owned(),
+            id: 0,
             title: title.to_owned(),
             content: content.to_owned(),
             author: author.to_owned(),
@@ -135,9 +150,10 @@ impl ItemRepositorySqlite {
     pub async fn new(pool: SqlitePool) -> Result<ItemRepositorySqlite> {
         sqlx::query(
             "CREATE TABLE IF NOT EXISTS Items (
+      id INTEGER PRIMARY KEY,
       user_id TEXT NOT NULL,
       subscription_id TEXT NOT NULL,
-      id TEXT NOT NULL,
+      external_id TEXT NOT NULL,
       title TEXT NOT NULL,
       content TEXT NOT NULL,
       author TEXT NOT NULL,
@@ -146,7 +162,7 @@ impl ItemRepositorySqlite {
       fetched_at_ms INTEGER NOT NULL,
       starred BOOL NOT NULL,
       read BOOL NOT NULL,
-      PRIMARY KEY (user_id, subscription_id, id))",
+      UNIQUE(user_id, subscription_id, external_id))",
         )
         .execute(&pool)
         .await?;
@@ -211,7 +227,10 @@ impl ItemRepository for ItemRepositorySqlite {
         let query_str = format!("{} AND {}", base_query, conditions);
         let mut query = sqlx::query_as::<_, Item>(&query_str).bind(user_id);
         for id in ids {
-            query = query.bind(id);
+            query = match id.parse::<i64>() {
+                Ok(id_num) => query.bind(id_num),
+                Err(_) => query,
+            };
         }
         Ok(query.fetch_all(&self.pool).await?)
     }
@@ -258,7 +277,7 @@ impl ItemRepository for ItemRepositorySqlite {
     async fn insert_items(&self, items: Vec<Item>) -> Result<()> {
         let base = String::from("
     INSERT INTO Items 
-    (user_id, subscription_id, id, title, content, author, url, created_at_ms, fetched_at_ms, starred, read)
+    (user_id, subscription_id, external_id, title, content, author, url, created_at_ms, fetched_at_ms, starred, read)
     VALUES ");
         let values = items
             .iter()
@@ -266,7 +285,7 @@ impl ItemRepository for ItemRepositorySqlite {
             .collect::<Vec<&str>>()
             .join(",");
         let query_str = format!(
-            "{}{} ON CONFLICT(user_id, subscription_id, id) DO NOTHING",
+            "{}{} ON CONFLICT(user_id, subscription_id, external_id) DO NOTHING",
             base, values
         );
         let mut query = sqlx::query(&query_str);
@@ -274,7 +293,7 @@ impl ItemRepository for ItemRepositorySqlite {
             query = query
                 .bind(&item.user_id)
                 .bind(&item.subscription_id)
-                .bind(&item.id)
+                .bind(&item.external_id)
                 .bind(&item.title)
                 .bind(&item.content)
                 .bind(&item.author)
@@ -342,11 +361,11 @@ mod tests {
     use super::super::in_memory_pool;
     use super::*;
 
-    fn new_fake_item(id: &str, created_at_ms: i64) -> Item {
+    fn new_fake_item(external_id: &str, created_at_ms: i64) -> Item {
         Item::new_item(
             "user_id",
             "subscription_id",
-            id,
+            external_id,
             "title",
             "content",
             "author",
@@ -357,7 +376,7 @@ mod tests {
 
     #[rocket::async_test]
     pub async fn insert_items_should_succeed() {
-        let repository = new_items_repository(in_memory_pool().await).await.unwrap();
+        let repository = new_item_repository(in_memory_pool().await).await.unwrap();
         let items = vec![
             new_fake_item("1", 1),
             new_fake_item("2", 2),
@@ -374,23 +393,20 @@ mod tests {
 
     #[rocket::async_test]
     pub async fn insert_same_items_should_do_nothing() {
-        let repository = new_items_repository(in_memory_pool().await).await.unwrap();
-        let items = vec![new_fake_item("1", 1), new_fake_item("2", 2)];
+        let repository = new_item_repository(in_memory_pool().await).await.unwrap();
+        let mut items = vec![new_fake_item("1", 1), new_fake_item("2", 2)];
         repository.insert_items(items.clone()).await.unwrap();
         // Insert same items again.
         repository
             .insert_items(vec![new_fake_item("1", 1), new_fake_item("3", 3)])
             .await
             .unwrap();
-        assert_eq!(
-            repository
-                .get_items("user_id", PageOption::<String>::new(10, false))
-                .await
-                .unwrap()
-                .items
-                .len(),
-            3
-        );
+        items = repository
+            .get_items("user_id", PageOption::<String>::new(10, false))
+            .await
+            .unwrap()
+            .items;
+        assert_eq!(items.len(), 3);
 
         repository
             .mark_as(items[0].key(), State::READ)
@@ -410,7 +426,7 @@ mod tests {
 
     #[rocket::async_test]
     pub async fn mark_all_as_read_should_succeed() {
-        let repository = new_items_repository(in_memory_pool().await).await.unwrap();
+        let repository = new_item_repository(in_memory_pool().await).await.unwrap();
         let items = vec![
             new_fake_item("1", 1),
             new_fake_item("2", 2),
@@ -428,7 +444,7 @@ mod tests {
 
     #[rocket::async_test]
     pub async fn mark_older_as_read_should_succeed() {
-        let repository = new_items_repository(in_memory_pool().await).await.unwrap();
+        let repository = new_item_repository(in_memory_pool().await).await.unwrap();
         let items = vec![
             new_fake_item("1", 1),
             new_fake_item("2", 2),
@@ -455,13 +471,19 @@ mod tests {
 
     #[rocket::async_test]
     pub async fn mark_item_should_succeed() {
-        let repository = new_items_repository(in_memory_pool().await).await.unwrap();
-        let items = vec![
+        let repository = new_item_repository(in_memory_pool().await).await.unwrap();
+        let mut items = vec![
             new_fake_item("1", 1),
             new_fake_item("2", 2),
             new_fake_item("3", 3),
         ];
         repository.insert_items(items.clone()).await.unwrap();
+
+        items = repository
+            .get_items("user_id", PageOption::<String>::new(10, false))
+            .await
+            .unwrap()
+            .items;
         repository
             .mark_as(items[0].key(), State::STARRED)
             .await

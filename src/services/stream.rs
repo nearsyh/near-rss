@@ -14,7 +14,7 @@ pub struct ItemId {
 impl From<Item> for ItemId {
     fn from(item: Item) -> ItemId {
         ItemId {
-            id: item.id,
+            id: item.id.to_string(),
             direct_stream_ids: vec![],
             timestamp_usec: item.created_at_ms * 1000,
         }
@@ -65,7 +65,7 @@ impl From<Item> for ItemContent {
         ItemContent {
             crawl_time_msec: item.fetched_at_ms,
             timestamp_usec: item.fetched_at_ms * 1000,
-            id: item.id,
+            id: item.id.to_string(),
             categories: vec![],
             published: item.created_at_ms / 1000,
             updated: item.created_at_ms / 1000,
