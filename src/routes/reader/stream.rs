@@ -91,7 +91,7 @@ pub async fn get_item_ids(
     Json(ItemIds::from(item_ids_page))
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Contents {
     direction: String,
     id: String,
@@ -121,12 +121,14 @@ pub async fn get_contents(
             .unwrap(),
         None => vec![],
     };
-    Json(Contents {
+    let json = Json(Contents {
         direction: "ltr".to_string(),
-        id: "id".to_string(),
+        id: "user/-/state/com.google/reading-list".to_string(),
         title: "Reading List".to_string(),
         description: "Reading List".to_string(),
         updated: current_time_s() as u64,
         items: item_contents,
-    })
+    });
+    println!("{:?}", json);
+    json
 }

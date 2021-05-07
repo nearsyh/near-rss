@@ -21,20 +21,20 @@ impl From<Item> for ItemId {
     }
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Url {
     href: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Summary {
     direction: String,
     content: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Origin {
     stream_id: String,
@@ -42,11 +42,11 @@ pub struct Origin {
     html_url: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemContent {
-    crawl_time_msec: i64,
-    timestamp_usec: i64,
+    crawl_time_msec: String,
+    timestamp_usec: String,
     id: String,
     categories: Vec<String>,
     // Seconds
@@ -63,8 +63,8 @@ pub struct ItemContent {
 impl From<Item> for ItemContent {
     fn from(item: Item) -> ItemContent {
         ItemContent {
-            crawl_time_msec: item.fetched_at_ms,
-            timestamp_usec: item.fetched_at_ms * 1000,
+            crawl_time_msec: item.fetched_at_ms.to_string(),
+            timestamp_usec: (item.fetched_at_ms * 1000).to_string(),
             id: item.id.to_string(),
             categories: vec![],
             published: item.created_at_ms / 1000,
@@ -78,8 +78,8 @@ impl From<Item> for ItemContent {
             author: item.author,
             origin: Origin {
                 stream_id: item.subscription_id,
-                title: "".to_owned(),
-                html_url: "".to_owned(),
+                title: "HN Daily".to_owned(),
+                html_url: "https://www.daemonology.net/".to_owned(),
             },
         }
     }
