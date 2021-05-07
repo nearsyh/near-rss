@@ -1,5 +1,5 @@
 use crate::common::{Page, PageOption};
-use crate::database::items::{ItemRepository, Item};
+use crate::database::items::{Item, ItemRepository};
 use anyhow::Result;
 use serde::Serialize;
 
@@ -57,7 +57,7 @@ pub struct ItemContent {
     summary: Summary,
     title: String,
     author: String,
-    origin: Origin
+    origin: Origin,
 }
 
 impl From<Item> for ItemContent {
@@ -69,9 +69,7 @@ impl From<Item> for ItemContent {
             categories: vec![],
             published: item.created_at_ms / 1000,
             updated: item.created_at_ms / 1000,
-            canonical: Url {
-                href: item.url
-            },
+            canonical: Url { href: item.url },
             summary: Summary {
                 direction: String::from("ltr"),
                 content: item.content,
@@ -82,7 +80,7 @@ impl From<Item> for ItemContent {
                 stream_id: item.subscription_id,
                 title: "".to_owned(),
                 html_url: "".to_owned(),
-            }
+            },
         }
     }
 }
@@ -90,6 +88,12 @@ impl From<Item> for ItemContent {
 #[rocket::async_trait]
 pub trait StreamService {
     async fn get_unread_item_ids(
+        &self,
+        user_id: &str,
+        page_option: PageOption<String>,
+    ) -> Result<Page<ItemId, String>>;
+
+    async fn get_read_item_ids(
         &self,
         user_id: &str,
         page_option: PageOption<String>,
@@ -107,11 +111,7 @@ pub trait StreamService {
         page_option: PageOption<String>,
     ) -> Result<Page<ItemId, String>>;
 
-    async fn get_item_contents(
-        &self,
-        user_id: &str,
-        ids: Vec<String>
-    ) -> Result<Vec<ItemContent>>;
+    async fn get_item_contents(&self, user_id: &str, ids: Vec<String>) -> Result<Vec<ItemContent>>;
 }
 
 struct StreamServiceImpl {
@@ -125,7 +125,22 @@ impl StreamService for StreamServiceImpl {
         user_id: &str,
         page_option: PageOption<String>,
     ) -> Result<Page<ItemId, String>> {
-        let page = self.item_repository.get_unread_items(user_id, page_option).await?;
+        let page = self
+            .item_repository
+            .get_unread_items(user_id, page_option)
+            .await?;
+        Ok(page.convert::<ItemId, _>(|item| ItemId::from(item)))
+    }
+
+    async fn get_read_item_ids(
+        &self,
+        user_id: &str,
+        page_option: PageOption<String>,
+    ) -> Result<Page<ItemId, String>> {
+        let page = self
+            .item_repository
+            .get_read_items(user_id, page_option)
+            .await?;
         Ok(page.convert::<ItemId, _>(|item| ItemId::from(item)))
     }
 
@@ -146,23 +161,19 @@ impl StreamService for StreamServiceImpl {
         user_id: &str,
         page_option: PageOption<String>,
     ) -> Result<Page<ItemId, String>> {
-        let page = self
-            .item_repository
-            .get_items(user_id, page_option)
-            .await?;
+        let page = self.item_repository.get_items(user_id, page_option).await?;
         Ok(page.convert::<ItemId, _>(|item| ItemId::from(item)))
     }
 
-   async fn get_item_contents(
-        &self,
-        user_id: &str,
-        ids: Vec<String>
-    ) -> Result<Vec<ItemContent>> {
+    async fn get_item_contents(&self, user_id: &str, ids: Vec<String>) -> Result<Vec<ItemContent>> {
         if ids.is_empty() {
             return Ok(vec![]);
         }
         let items = self.item_repository.get_items_by_id(user_id, ids).await?;
-        Ok(items.into_iter().map(|item| ItemContent::from(item)).collect())
+        Ok(items
+            .into_iter()
+            .map(|item| ItemContent::from(item))
+            .collect())
     }
 }
 

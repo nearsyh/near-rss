@@ -122,6 +122,12 @@ pub trait ItemRepository {
         page_option: PageOption<String>,
     ) -> Result<Page<Item, String>>;
 
+    async fn get_read_items(
+        &self,
+        user_id: &str,
+        page_option: PageOption<String>,
+    ) -> Result<Page<Item, String>>;
+
     async fn get_starred_items(
         &self,
         user_id: &str,
@@ -255,6 +261,19 @@ impl ItemRepository for ItemRepositorySqlite {
     ) -> Result<Page<Item, String>> {
         let query = format!(
             "SELECT * FROM Items WHERE user_id = ? AND read = false {}",
+            Self::build_page_query(&page_option)
+        );
+        self.get_items_with_query(user_id, query, &page_option)
+            .await
+    }
+
+    async fn get_read_items(
+        &self,
+        user_id: &str,
+        page_option: PageOption<String>,
+    ) -> Result<Page<Item, String>> {
+        let query = format!(
+            "SELECT * FROM Items WHERE user_id = ? AND read = true {}",
             Self::build_page_query(&page_option)
         );
         self.get_items_with_query(user_id, query, &page_option)
@@ -526,6 +545,14 @@ mod tests {
                 .items,
             &items[0..2]
         );
+        assert_eq!(
+            repository
+                .get_read_items("user_id", PageOption::<String>::new(10, false))
+                .await
+                .unwrap()
+                .items,
+            &items[2..]
+        ); 
         repository
             .mark_as(items[2].key(), State::UNREAD)
             .await
