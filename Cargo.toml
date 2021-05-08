@@ -25,3 +25,4 @@ git = "https://github.com/SergioBenitez/Rocket"
 
 [dependencies.rocket_contrib]
 git = "https://github.com/SergioBenitez/Rocket"
+features = ["tera_templates"]

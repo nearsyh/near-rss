@@ -11,6 +11,8 @@ mod middlewares;
 mod routes;
 mod services;
 
+use rocket_contrib::templates::Template;
+
 #[launch]
 async fn rocket() -> _ {
     rocket::build()
@@ -27,5 +29,9 @@ async fn rocket() -> _ {
                 routes::reader::stream::get_contents,
             ],
         )
+        .mount("/ui", routes![
+            routes::ui::index,
+        ])
+        .attach(Template::fairing())
         .register("/", catchers![routes::unauthorized])
 }
