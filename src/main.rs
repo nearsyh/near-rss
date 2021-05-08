@@ -29,9 +29,15 @@ async fn rocket() -> _ {
                 routes::reader::stream::get_contents,
             ],
         )
-        .mount("/ui", routes![
-            routes::ui::index,
-        ])
+        .mount(
+            "/ui",
+            routes![
+                routes::ui::index::already_login,
+                routes::ui::index::not_login,
+                routes::ui::login::login,
+            ],
+        )
+        .mount("/", routes![routes::index])
         .attach(Template::fairing())
         .register("/", catchers![routes::unauthorized])
 }

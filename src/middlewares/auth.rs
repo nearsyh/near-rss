@@ -11,10 +11,6 @@ pub enum AuthError {
   Internal,
 }
 
-pub struct AuthUser {
-  pub user: User,
-}
-
 async fn extract_authorization(req: &Request<'_>) -> Option<String> {
   if is_debug() {
     let token = get_user_token(SERVICES.get().await).await;
@@ -37,6 +33,10 @@ fn extract_token(authorization_value: &str) -> Option<&str> {
   authorization_value.strip_prefix("GoogleLogin auth=")
 }
 
+pub struct AuthUser {
+  pub user: User,
+}
+
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for AuthUser {
   type Error = AuthError;
@@ -55,6 +55,33 @@ impl<'r> FromRequest<'r> for AuthUser {
           }
         }
         None => Outcome::Failure((Status::Forbidden, AuthError::InvalidToken)),
+      },
+    }
+  }
+}
+
+pub struct AuthUiUser {
+  pub user: User,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for AuthUiUser {
+  type Error = AuthError;
+
+  async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+    match extract_authorization(req).await {
+      None => Outcome::Forward(()),
+      Some(ref authorization) => match extract_token(authorization) {
+        Some(token) => {
+          if !Token::is_valid(&token) {
+            return Outcome::Forward(());
+          }
+          match SERVICES.get().await.user_service.get_user(token).await {
+            Err(_) => Outcome::Forward(()),
+            Ok(user) => Outcome::Success(AuthUiUser { user: user }),
+          }
+        }
+        None => Outcome::Forward(())
       },
     }
   }
