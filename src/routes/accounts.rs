@@ -1,14 +1,6 @@
-use crate::common::Services;
+use crate::common::{Services, login::LoginRequest};
 use rocket::form::Form;
 use rocket::response::status::Forbidden;
-
-#[derive(FromForm)]
-pub struct LoginRequest {
-    #[field(name = "Email")]
-    email: String,
-    #[field(name = "Passwd")]
-    password: String,
-}
 
 #[post("/ClientLogin", data = "<request>")]
 pub async fn client_login(

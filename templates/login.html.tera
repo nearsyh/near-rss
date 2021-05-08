@@ -9,6 +9,14 @@
 </head>
 
 <body>
-  Login
+  <form method="POST" id="login" action="/accounts/ClientLogin">
+    <label id="email-label" for="email">Email</label>
+    <input id="email">
+
+    <label id="password-label" for="password">Password</label>
+    <input id="password" type="password">
+
+    <input type="submit" value="Login">
+  </form>
 </body>
 </html>

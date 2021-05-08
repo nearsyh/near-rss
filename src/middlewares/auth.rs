@@ -69,7 +69,7 @@ impl<'r> FromRequest<'r> for AuthUiUser {
   type Error = AuthError;
 
   async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-    match extract_authorization(req).await {
+    match req.headers().get_one("Authorization") {
       None => Outcome::Forward(()),
       Some(ref authorization) => match extract_token(authorization) {
         Some(token) => {
