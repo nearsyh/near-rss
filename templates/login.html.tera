@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {% block head %}
+
+  <title></title>
+  {% endblock head %}
+</head>
+
+<body>
+  Login
+</body>
+</html>
