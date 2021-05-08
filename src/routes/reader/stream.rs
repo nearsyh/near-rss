@@ -61,22 +61,25 @@ pub async fn get_item_ids(
         limit: n.unwrap_or(100usize),
         desc: !r.unwrap_or("").eq("o"),
     };
-    services
-        .subscription_service
-        .load_subscription_items(&user.id)
-        .await
-        .unwrap();
-    let item_ids_page = match FilterType::from_params(s, xt) {
+    let filter_type = FilterType::from_params(s, xt);
+    let item_ids_page = match filter_type {
         FilterType::STARRED => services
             .stream_service
             .get_starred_item_ids(&user.id, page_option)
             .await
             .unwrap(),
-        FilterType::UNREAD => services
-            .stream_service
-            .get_unread_item_ids(&user.id, page_option)
-            .await
-            .unwrap(),
+        FilterType::UNREAD => {
+            services
+                .subscription_service
+                .load_subscription_items(&user.id)
+                .await
+                .unwrap();
+            services
+                .stream_service
+                .get_unread_item_ids(&user.id, page_option)
+                .await
+                .unwrap()
+        }
         FilterType::READ => services
             .stream_service
             .get_read_item_ids(&user.id, page_option)
@@ -103,7 +106,7 @@ pub struct Contents {
 
 #[derive(FromForm)]
 pub struct Ids<'r> {
-   pub i: Option<Vec<&'r str>>,
+    pub i: Option<Vec<&'r str>>,
 }
 
 #[post("/api/0/stream/items/contents", data = "<ids>")]
