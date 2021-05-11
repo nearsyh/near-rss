@@ -50,7 +50,7 @@ pub struct ItemContent {
     id: String,
     categories: Vec<String>,
     // Seconds
-    published: i64,
+    pub published: i64,
     // Seconds
     updated: i64,
     canonical: Url,

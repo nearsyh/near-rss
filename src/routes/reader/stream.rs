@@ -116,7 +116,7 @@ pub async fn get_contents(
     ids: Form<Ids<'_>>,
 ) -> Json<Contents> {
     let user = auth_user.user;
-    let item_contents = match ids.i {
+    let mut item_contents = match ids.i {
         Some(ref i) => services
             .stream_service
             .get_item_contents(&user.id, i)
@@ -124,6 +124,7 @@ pub async fn get_contents(
             .unwrap(),
         None => vec![],
     };
+    item_contents.sort_by(|a, b| b.published.cmp(&a.published));
     let json = Json(Contents {
         direction: "ltr".to_string(),
         id: "user/-/state/com.google/reading-list".to_string(),
