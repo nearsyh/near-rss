@@ -103,15 +103,13 @@ fn extract_items_from_feed(user_id: &str, subscription_id: &str, feed: &Feed) ->
     feed.entries
         .iter()
         .map(|entry| {
+            println!("{:?}", entry);
             Item::new_item(
                 user_id,
                 subscription_id,
                 &entry.id,
                 &entry.title.as_ref().map_or("", |t| &t.content),
-                &entry
-                    .content
-                    .as_ref()
-                    .map_or("", |t| t.body.as_deref().unwrap_or("")),
+                &entry.summary.as_ref().map_or("", |t| &t.content),
                 &entry
                     .authors
                     .iter()

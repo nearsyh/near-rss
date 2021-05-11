@@ -25,6 +25,8 @@ impl From<Item> for ItemId {
 #[serde(rename_all = "camelCase")]
 pub struct Url {
     href: String,
+    #[serde(rename = "type")]
+    type_f: Option<String>,
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -53,7 +55,8 @@ pub struct ItemContent {
     pub published: i64,
     // Seconds
     updated: i64,
-    canonical: Url,
+    canonical: Vec<Url>,
+    alternate: Vec<Url>,
     summary: Summary,
     title: String,
     author: String,
@@ -62,14 +65,25 @@ pub struct ItemContent {
 
 impl From<Item> for ItemContent {
     fn from(item: Item) -> ItemContent {
+        println!("{}", item.content);
         ItemContent {
             crawl_time_msec: item.fetched_at_ms.to_string(),
-            timestamp_usec: (item.fetched_at_ms * 1000).to_string(),
+            timestamp_usec: (item.created_at_ms * 1000).to_string(),
             id: item.id.to_string(),
-            categories: vec![],
+            categories: vec![
+                "user/-/state/com.google/reading-list".to_owned(),
+                "user/-/state/com.google/fresh".to_owned(),
+            ],
             published: item.created_at_ms / 1000,
             updated: item.created_at_ms / 1000,
-            canonical: Url { href: item.url },
+            canonical: vec![Url {
+                href: item.url.clone(),
+                type_f: Option::None,
+            }],
+            alternate: vec![Url {
+                href: item.url,
+                type_f: Option::Some("text/html".to_owned()),
+            }],
             summary: Summary {
                 direction: String::from("ltr"),
                 content: item.content,
@@ -188,28 +202,36 @@ impl StreamService for StreamServiceImpl {
         if ids.is_empty() {
             return Ok(());
         }
-        self.item_repository.mark_items_as(user_id, ids, State::READ).await
+        self.item_repository
+            .mark_items_as(user_id, ids, State::READ)
+            .await
     }
 
     async fn mark_as_unread(&self, user_id: &str, ids: &Vec<&str>) -> Result<()> {
         if ids.is_empty() {
             return Ok(());
         }
-        self.item_repository.mark_items_as(user_id, ids, State::UNREAD).await
+        self.item_repository
+            .mark_items_as(user_id, ids, State::UNREAD)
+            .await
     }
 
     async fn mark_as_starred(&self, user_id: &str, ids: &Vec<&str>) -> Result<()> {
         if ids.is_empty() {
             return Ok(());
         }
-        self.item_repository.mark_items_as(user_id, ids, State::STARRED).await
+        self.item_repository
+            .mark_items_as(user_id, ids, State::STARRED)
+            .await
     }
 
     async fn mark_as_unstarred(&self, user_id: &str, ids: &Vec<&str>) -> Result<()> {
         if ids.is_empty() {
             return Ok(());
         }
-        self.item_repository.mark_items_as(user_id, ids, State::UNSTARRED).await
+        self.item_repository
+            .mark_items_as(user_id, ids, State::UNSTARRED)
+            .await
     }
 }
 

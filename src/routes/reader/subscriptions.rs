@@ -31,7 +31,7 @@ pub struct AddSubscriptionResponse {
     stream_id: String,
 }
 
-#[get("/api/0/subscription/quickadd?<quickadd>")]
+#[post("/api/0/subscription/quickadd?<quickadd>")]
 pub async fn add_subscription(
     auth_user: AuthUser,
     services: &Services,

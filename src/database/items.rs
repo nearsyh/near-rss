@@ -319,7 +319,7 @@ impl ItemRepository for ItemRepositorySqlite {
                 .bind(&item.subscription_id)
                 .bind(&item.external_id)
                 .bind(&item.title)
-                .bind(&item.content)
+                .bind(item.content.trim().to_owned())
                 .bind(&item.author)
                 .bind(&item.url)
                 .bind(item.created_at_ms)
