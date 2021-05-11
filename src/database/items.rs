@@ -140,6 +140,8 @@ pub trait ItemRepository {
 
     async fn mark_as(&self, item_id: ItemId, state: State) -> Result<()>;
 
+    async fn mark_items_as(&self, user_id: &str, ids: &Vec<&str>, state: State) -> Result<()>;
+
     async fn mark_all_as_read(&self, user_id: &str) -> Result<()>;
 
     async fn mark_older_as_read(&self, user_id: &str, older_than: i64) -> Result<()>;
@@ -350,6 +352,24 @@ impl ItemRepository for ItemRepositorySqlite {
             .bind(&item_id.id)
             .execute(&self.pool)
             .await?;
+        Ok(())
+    }
+
+    async fn mark_items_as(&self, user_id: &str, ids: &Vec<&str>, state: State) -> Result<()> {
+        if ids.is_empty() {
+            return Ok(());
+        }
+        let conditions = ids
+            .iter()
+            .map(|_| " id = ? ")
+            .collect::<Vec<&str>>()
+            .join("OR");
+        let query_str = format!("UPDATE Items SET {} = ? WHERE user_id = ? AND {}", state.column(), conditions);
+        let mut query = sqlx::query(&query_str).bind(state.value()).bind(user_id);
+        for id in ids {
+            query = query.bind(id);
+        }
+        query.execute(&self.pool).await?;
         Ok(())
     }
 

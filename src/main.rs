@@ -27,6 +27,7 @@ async fn rocket() -> _ {
                 routes::reader::users::token,
                 routes::reader::stream::get_item_ids,
                 routes::reader::stream::get_contents,
+                routes::reader::edit::edit_tag,
             ],
         )
         .mount(

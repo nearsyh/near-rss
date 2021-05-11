@@ -1,5 +1,5 @@
 use crate::common::{Page, PageOption};
-use crate::database::items::{Item, ItemRepository};
+use crate::database::items::{Item, ItemRepository, State};
 use anyhow::Result;
 use serde::Serialize;
 
@@ -112,6 +112,14 @@ pub trait StreamService {
     ) -> Result<Page<ItemId, String>>;
 
     async fn get_item_contents(&self, user_id: &str, ids: &Vec<&str>) -> Result<Vec<ItemContent>>;
+
+    async fn mark_as_read(&self, user_id: &str, ids: &Vec<&str>) -> Result<()>;
+
+    async fn mark_as_unread(&self, user_id: &str, ids: &Vec<&str>) -> Result<()>;
+
+    async fn mark_as_starred(&self, user_id: &str, ids: &Vec<&str>) -> Result<()>;
+
+    async fn mark_as_unstarred(&self, user_id: &str, ids: &Vec<&str>) -> Result<()>;
 }
 
 struct StreamServiceImpl {
@@ -174,6 +182,34 @@ impl StreamService for StreamServiceImpl {
             .into_iter()
             .map(|item| ItemContent::from(item))
             .collect())
+    }
+
+    async fn mark_as_read(&self, user_id: &str, ids: &Vec<&str>) -> Result<()> {
+        if ids.is_empty() {
+            return Ok(());
+        }
+        self.item_repository.mark_items_as(user_id, ids, State::READ).await
+    }
+
+    async fn mark_as_unread(&self, user_id: &str, ids: &Vec<&str>) -> Result<()> {
+        if ids.is_empty() {
+            return Ok(());
+        }
+        self.item_repository.mark_items_as(user_id, ids, State::UNREAD).await
+    }
+
+    async fn mark_as_starred(&self, user_id: &str, ids: &Vec<&str>) -> Result<()> {
+        if ids.is_empty() {
+            return Ok(());
+        }
+        self.item_repository.mark_items_as(user_id, ids, State::STARRED).await
+    }
+
+    async fn mark_as_unstarred(&self, user_id: &str, ids: &Vec<&str>) -> Result<()> {
+        if ids.is_empty() {
+            return Ok(());
+        }
+        self.item_repository.mark_items_as(user_id, ids, State::UNSTARRED).await
     }
 }
 
