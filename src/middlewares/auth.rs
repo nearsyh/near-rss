@@ -69,19 +69,17 @@ impl<'r> FromRequest<'r> for AuthUiUser {
   type Error = AuthError;
 
   async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-    match req.headers().get_one("Authorization") {
+    match req.cookies().get_pending("cltoken") {
       None => Outcome::Forward(()),
-      Some(ref authorization) => match extract_token(authorization) {
-        Some(token) => {
-          if !Token::is_valid(&token) {
-            return Outcome::Forward(());
-          }
-          match SERVICES.get().await.user_service.get_user(token).await {
-            Err(_) => Outcome::Forward(()),
-            Ok(user) => Outcome::Success(AuthUiUser { user: user }),
-          }
+      Some(ref cookie) => {
+        let token = cookie.value();
+        if !Token::is_valid(&token) {
+          return Outcome::Forward(());
         }
-        None => Outcome::Forward(())
+        match SERVICES.get().await.user_service.get_user(token).await {
+          Err(_) => Outcome::Forward(()),
+          Ok(user) => Outcome::Success(AuthUiUser { user: user }),
+        }
       },
     }
   }

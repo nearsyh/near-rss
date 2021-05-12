@@ -37,6 +37,7 @@ async fn rocket() -> _ {
                 routes::ui::index::not_login,
                 routes::ui::login::login,
                 routes::ui::login::login_with_creds,
+                routes::ui::login::login_action,
             ],
         )
         .mount("/", routes![routes::index])
