@@ -12,7 +12,7 @@ pub async fn init_data(services: &super::Services) {
         .unwrap();
     services
         .subscription_service
-        .add_subscription_from_url(&user.id, "https://www.daemonology.net/hn-daily/index.rss")
+        .add_subscription_from_url(&user.id, "https://blogs.nearsyh.me/atom.xml")
         .await
         .unwrap();
 }
