@@ -9,12 +9,12 @@
 </head>
 
 <body>
-  <form method="POST" id="login" action="/accounts/ClientLogin">
+  <form method="POST" id="login" action="/ui/login">
     <label id="email-label" for="email">Email</label>
-    <input id="email">
+    <input type = "text" id="email" name="email">
 
     <label id="password-label" for="password">Password</label>
-    <input id="password" type="password">
+    <input type="password" id="password" name="password">
 
     <input type="submit" value="Login">
   </form>
