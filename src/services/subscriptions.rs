@@ -103,7 +103,6 @@ fn extract_items_from_feed(user_id: &str, subscription_id: &str, feed: &Feed) ->
     feed.entries
         .iter()
         .map(|entry| {
-            println!("{:?}", entry);
             Item::new_item(
                 user_id,
                 subscription_id,

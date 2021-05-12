@@ -65,7 +65,6 @@ pub struct ItemContent {
 
 impl From<Item> for ItemContent {
     fn from(item: Item) -> ItemContent {
-        println!("{}", item.content);
         ItemContent {
             crawl_time_msec: item.fetched_at_ms.to_string(),
             timestamp_usec: (item.created_at_ms * 1000).to_string(),

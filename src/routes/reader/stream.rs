@@ -125,14 +125,12 @@ pub async fn get_contents(
         None => vec![],
     };
     item_contents.sort_by(|a, b| b.published.cmp(&a.published));
-    let json = Json(Contents {
+    Json(Contents {
         direction: "ltr".to_string(),
         id: "user/-/state/com.google/reading-list".to_string(),
         title: "Reading List".to_string(),
         description: "Reading List".to_string(),
         updated: current_time_s() as u64,
         items: item_contents,
-    });
-    println!("{:?}", json);
-    json
+    })
 }
