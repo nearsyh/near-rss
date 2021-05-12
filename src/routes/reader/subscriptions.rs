@@ -1,8 +1,16 @@
-use crate::middlewares::auth::AuthUser;
 use crate::common::Services;
+use crate::middlewares::auth::AuthUser;
 use crate::services::subscriptions::Subscription;
+use rocket::form::Form;
 use rocket_contrib::json::Json;
 use serde::Serialize;
+
+#[derive(FromForm)]
+pub struct EditTagRequest<'r> {
+    pub i: Option<Vec<&'r str>>,
+    pub a: Option<&'r str>,
+    pub r: Option<&'r str>,
+}
 
 #[derive(Serialize)]
 pub struct Subscriptions {
@@ -49,4 +57,54 @@ pub async fn add_subscription(
         num_results: 1,
         stream_id: subscription.id,
     })
+}
+
+#[derive(FromForm)]
+pub struct SubscriptionEditRequest<'r> {
+    // Action
+    ac: &'r str,
+    // Subscription id
+    s: &'r str,
+    // Title
+    t: Option<&'r str>,
+    // Tag to add
+    a: Vec<&'r str>,
+    // Tag to remove
+    r: Vec<&'r str>,
+}
+
+#[post("/api/0/subscription/edit", data = "<request>")]
+pub async fn edit_subscription(
+    auth_user: AuthUser,
+    services: &Services,
+    request: Form<SubscriptionEditRequest<'_>>,
+) -> &'static str {
+    let user = auth_user.user;
+    if let Some(feed_url) = request.s.strip_prefix("feed/") {
+        match request.ac {
+            "subscribe" => {
+                services
+                    .subscription_service
+                    .add_subscription_from_url(&user.id, feed_url)
+                    .await
+                    .unwrap();
+            }
+            "unsubscribe" => {
+                services
+                    .subscription_service
+                    .remove_subscription(&user.id, &request.s)
+                    .await
+                    .unwrap();
+            }
+            _ => {}
+        };
+    }
+    if request.ac == "edit" {
+        services
+            .subscription_service
+            .edit_subscription(&user.id, &request.s, &request.t, &request.a, &request.r)
+            .await
+            .unwrap();
+    }
+    "OK"
 }

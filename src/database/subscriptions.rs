@@ -1,6 +1,7 @@
 use crate::common::error::Errors;
 use anyhow::{Error, Result};
 use sqlx::SqlitePool;
+use std::collections::HashSet;
 
 #[derive(sqlx::FromRow, PartialEq, Eq, Debug, Clone)]
 pub struct Subscription {
@@ -16,7 +17,33 @@ pub struct Subscription {
 
 impl Subscription {
     pub fn categories(&self) -> Vec<&str> {
-        self.joined_categories.split(',').collect()
+        if self.joined_categories.is_empty() {
+            vec![]
+        } else {
+            self.joined_categories
+                .split(',')
+                .filter(|cat| !cat.is_empty())
+                .collect()
+        }
+    }
+
+    pub fn add_categories(&mut self, to_add: &Vec<&str>) {
+        let mut categories: Vec<&str> = self.joined_categories.split(',').collect();
+        for c in to_add {
+            if !c.is_empty() {
+                categories.push(c)
+            }
+        }
+        categories.dedup();
+        self.joined_categories = categories.join(",");
+    }
+
+    pub fn remove_categories(&mut self, to_remove: &Vec<&str>) {
+        let mut categories: HashSet<&str> = self.joined_categories.split(',').collect();
+        for c in to_remove {
+            categories.remove(c);
+        }
+        self.joined_categories = categories.into_iter().collect::<Vec<&str>>().join(",");
     }
 }
 

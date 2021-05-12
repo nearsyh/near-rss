@@ -28,8 +28,8 @@ impl From<crate::database::subscriptions::Subscription> for Subscription {
             .categories()
             .into_iter()
             .map(|category_str| Category {
-                id: format!("user/{}/label/{}", db_subscription.user_id, category_str),
-                label: category_str.to_string(),
+                id: String::from(category_str),
+                label: String::from(category_str.split("/").collect::<Vec<&str>>().pop().unwrap()),
             })
             .collect();
         Subscription {
@@ -91,6 +91,15 @@ pub trait SubscriptionService {
     async fn list_subscriptions(&self, user_id: &str) -> Result<Vec<Subscription>>;
 
     async fn load_subscription_items(&self, user_id: &str) -> Result<()>;
+
+    async fn edit_subscription(
+        &self,
+        user_id: &str,
+        id: &str,
+        title: &Option<&str>,
+        to_add: &Vec<&str>,
+        to_remove: &Vec<&str>,
+    ) -> Result<()>;
 }
 
 struct SubscriptionServiceImpl {
@@ -182,6 +191,31 @@ impl SubscriptionService for SubscriptionServiceImpl {
                 }
                 _ => continue,
             };
+        }
+        Ok(())
+    }
+
+    async fn edit_subscription(
+        &self,
+        user_id: &str,
+        id: &str,
+        title: &Option<&str>,
+        to_add: &Vec<&str>,
+        to_remove: &Vec<&str>,
+    ) -> Result<()> {
+        if let Some(mut subscription) = self
+            .subscription_repository
+            .get_subscription(user_id, id)
+            .await?
+        {
+            if let Some(new_title) = title {
+                subscription.title = String::from(*new_title);
+            }
+            subscription.remove_categories(to_remove);
+            subscription.add_categories(to_add);
+            self.subscription_repository
+                .update_subscription(subscription)
+                .await?;
         }
         Ok(())
     }
