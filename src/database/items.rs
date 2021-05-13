@@ -81,6 +81,20 @@ impl Item {
             read: false,
         }
     }
+
+    pub fn categories(&self) -> Vec<String> {
+        let mut ret = vec![];
+        ret.push("user/-/state/com.google/reading-list".to_owned());
+        if self.read {
+            ret.push("user/-/state/com.google/read".to_owned());
+        } else {
+            ret.push("user/-/state/com.google/fresh".to_owned());
+        }
+        if self.starred {
+            ret.push("user/-/state/com.google/starred".to_owned()); 
+        }
+        ret
+    }
 }
 
 pub enum State {
@@ -134,7 +148,7 @@ pub trait ItemRepository {
         page_option: PageOption<String>,
     ) -> Result<Page<Item, String>>;
 
-    async fn insert_items(&self, items: Vec<Item>) -> Result<()>;
+    async fn insert_items(&self, mut items: Vec<Item>) -> Result<()>;
 
     async fn delete_items(&self, user_id: &str, earlier_than: i64) -> Result<()>;
 
@@ -199,7 +213,8 @@ impl ItemRepositorySqlite {
             None => String::new(),
         };
         let order_and_limit = format!(
-            "ORDER BY created_at_ms, id {} LIMIT {}",
+            "ORDER BY created_at_ms {}, id {} LIMIT {}",
+            if page_option.desc { "DESC" } else { "" },
             if page_option.desc { "DESC" } else { "" },
             page_option.limit + 1
         );
@@ -212,6 +227,7 @@ impl ItemRepositorySqlite {
         query: String,
         page_option: &PageOption<String>,
     ) -> Result<Page<Item, String>> {
+        println!("{}", query);
         let mut items = sqlx::query_as::<_, Item>(&query)
             .bind(user_id)
             .fetch_all(&self.pool)
@@ -302,11 +318,12 @@ impl ItemRepository for ItemRepositorySqlite {
             .await
     }
 
-    async fn insert_items(&self, items: Vec<Item>) -> Result<()> {
+    async fn insert_items(&self, mut items: Vec<Item>) -> Result<()> {
         let base = String::from("
     INSERT INTO Items 
     (user_id, subscription_id, external_id, title, content, author, url, created_at_ms, fetched_at_ms, starred, read)
     VALUES ");
+        items.sort_by(|a, b| a.created_at_ms.cmp(&b.created_at_ms));
         let values = items
             .iter()
             .map(|_| "(?,?,?,?,?,?,?,?,?,?,?)")

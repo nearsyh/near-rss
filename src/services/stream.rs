@@ -48,20 +48,20 @@ pub struct Origin {
 #[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemContent {
-    crawl_time_msec: String,
-    timestamp_usec: String,
-    id: String,
-    categories: Vec<String>,
+    pub crawl_time_msec: String,
+    pub timestamp_usec: String,
+    pub id: String,
+    pub categories: Vec<String>,
     // Seconds
     pub published: i64,
     // Seconds
-    updated: i64,
-    canonical: Vec<Url>,
-    alternate: Vec<Url>,
-    summary: Summary,
-    title: String,
-    author: String,
-    origin: Origin,
+    pub updated: i64,
+    pub canonical: Vec<Url>,
+    pub alternate: Vec<Url>,
+    pub summary: Summary,
+    pub title: String,
+    pub author: String,
+    pub origin: Origin,
 }
 
 impl From<Item> for ItemContent {
@@ -70,10 +70,7 @@ impl From<Item> for ItemContent {
             crawl_time_msec: item.fetched_at_ms.to_string(),
             timestamp_usec: (item.created_at_ms * 1000).to_string(),
             id: format!("tag:google.com,2005:reader/item/{:016x}", item.id),
-            categories: vec![
-                "user/-/state/com.google/reading-list".to_owned(),
-                "user/-/state/com.google/fresh".to_owned(),
-            ],
+            categories: item.categories(),
             published: item.created_at_ms / 1000,
             updated: item.created_at_ms / 1000,
             canonical: vec![Url {
@@ -151,6 +148,9 @@ impl StreamService for StreamServiceImpl {
             .item_repository
             .get_unread_items(user_id, page_option)
             .await?;
+        for i in page.items.iter() {
+          println!("{} {}", i.id, i.created_at_ms);
+        }
         Ok(page.convert::<ItemId, _>(|item| ItemId::from(item)))
     }
 

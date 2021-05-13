@@ -91,6 +91,7 @@ pub async fn get_item_ids(
             .await
             .unwrap(),
     };
+    // println!("{}", item_ids_page.items.iter().map(|id| &*id.id).collect::<Vec<&str>>().join(","));
     Json(ItemIds::from(item_ids_page))
 }
 
@@ -118,8 +119,9 @@ pub async fn get_contents(
     let user = auth_user.user;
     let mut item_contents = match ids.i {
         Some(ref i) => {
+            println!("Original ids: {}", i.join(","));
             let ids_in_hex = super::convert_to_long_form_ids(i);
-            println!("{}", ids_in_hex.join(","));
+            println!("Converted ids: {}", ids_in_hex.join(","));
             services
                 .stream_service
                 .get_item_contents(&user.id, &ids_in_hex.iter().map(|s| &**s).collect())
@@ -128,16 +130,16 @@ pub async fn get_contents(
         }
         None => vec![],
     };
-    println!("{}", item_contents.len());
     item_contents.sort_by(|a, b| b.published.cmp(&a.published));
-    let json = Json(Contents {
+    for i in item_contents.iter() {
+      println!("{} {} {}", i.id, i.title, i.updated);
+    }
+    Json(Contents {
         direction: "ltr".to_string(),
         id: "user/-/state/com.google/reading-list".to_string(),
         title: "Reading List".to_string(),
         description: "Reading List".to_string(),
         updated: current_time_s() as u64,
         items: item_contents,
-    });
-    println!("{:?}", json);
-    json
+    })
 }
