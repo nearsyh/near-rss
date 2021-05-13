@@ -19,8 +19,6 @@ pub async fn edit_tag(
     if let Some(ref ids) = request.i {
         let ids_in_hex = super::convert_to_long_form_ids(ids);
         let ids_ref = &ids_in_hex.iter().map(|s| &**s).collect::<Vec<&str>>();
-        println!("Original ids: {}", ids.join(","));
-        println!("Converted ids: {}", ids_ref.join(","));
         if let Some(to_add) = request.a {
             if to_add == "user/-/state/com.google/read" {
                 services.stream_service.mark_as_read(user_id, ids_ref).await.unwrap();

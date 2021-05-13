@@ -48,14 +48,6 @@ impl Item {
         format!("{}-{}", self.created_at_ms, self.id)
     }
 
-    fn key(&self) -> ItemId {
-        ItemId {
-            user_id: self.user_id.clone(),
-            subscription_id: self.subscription_id.clone(),
-            id: self.id,
-        }
-    }
-
     pub fn new_item(
         user_id: &str,
         subscription_id: &str,
@@ -227,7 +219,6 @@ impl ItemRepositorySqlite {
         query: String,
         page_option: &PageOption<String>,
     ) -> Result<Page<Item, String>> {
-        println!("{}", query);
         let mut items = sqlx::query_as::<_, Item>(&query)
             .bind(user_id)
             .fetch_all(&self.pool)
@@ -260,7 +251,6 @@ impl ItemRepository for ItemRepositorySqlite {
         let query_str = format!("{} AND ({})", base_query, conditions);
         let mut query = sqlx::query_as::<_, Item>(&query_str).bind(user_id);
         for id in ids {
-            println!("{} {}", id, id_str_to_i64(id));
             query = query.bind(id_str_to_i64(id));
         }
         Ok(query.fetch_all(&self.pool).await?)
@@ -395,10 +385,6 @@ impl ItemRepository for ItemRepositorySqlite {
             query = query.bind(id_str_to_i64(id));
         }
         query.execute(&self.pool).await?;
-        let items = self.get_items_by_id(user_id, ids).await?;
-        for item in items {
-            println!("{:?}", item);
-        }
         Ok(())
     }
 

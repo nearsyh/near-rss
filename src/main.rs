@@ -10,11 +10,13 @@ mod database;
 mod middlewares;
 mod routes;
 mod services;
+use crate::middlewares::di::SERVICES;
 
 use rocket_contrib::templates::Template;
 
 #[launch]
 async fn rocket() -> _ {
+    SERVICES.get().await;
     rocket::build()
         .mount("/accounts", routes![routes::accounts::client_login])
         .mount(

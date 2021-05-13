@@ -15,8 +15,9 @@ if __name__ == "__main__":
     root = ET.parse(filename).getroot()
     for body in root.findall("body"):
         for folder in body:
-            title = folder.attrib["title"]
+            folder_title = folder.attrib["title"]
             for feed in folder:
                 feed_url = feed.attrib["xmlUrl"]
+                title = feed.attrib["title"]
                 requests.post(server + "/reader/api/0/subscription/quickadd?quickadd=" + feed_url, data={}, headers = headers)
-                requests.post(server + "/reader/api/0/subscription/edit", data={"ac": "edit","s": "feed/" + feed_url,"a": ["user/-/label/" + title]}, headers = headers)
+                requests.post(server + "/reader/api/0/subscription/edit", data={"ac": "edit","t": title, "s": "feed/" + feed_url,"a": ["user/-/label/" + folder_title]}, headers = headers)

@@ -148,9 +148,6 @@ impl StreamService for StreamServiceImpl {
             .item_repository
             .get_unread_items(user_id, page_option)
             .await?;
-        for i in page.items.iter() {
-          println!("{} {}", i.id, i.created_at_ms);
-        }
         Ok(page.convert::<ItemId, _>(|item| ItemId::from(item)))
     }
 
@@ -202,7 +199,6 @@ impl StreamService for StreamServiceImpl {
         if ids.is_empty() {
             return Ok(());
         }
-        println!("Mark as read {}", ids.join(":"));
         self.item_repository
             .mark_items_as(user_id, ids, State::READ)
             .await
