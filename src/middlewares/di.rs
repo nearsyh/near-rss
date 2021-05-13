@@ -1,4 +1,4 @@
-use crate::common::{Services, debug::is_debug, debug::init_data, error::Errors};
+use crate::common::{debug::init_data, debug::is_debug, error::Errors, Services};
 use crate::database::items::new_item_repository;
 use crate::database::subscriptions::new_subscription_repository;
 use crate::database::users::new_user_repository;
@@ -6,8 +6,10 @@ use crate::services::stream::new_stream_service;
 use crate::services::subscriptions::new_subscription_service;
 use crate::services::users::new_user_service;
 use async_once::AsyncOnce;
+use clokwerk::{Scheduler, TimeUnits, ScheduleHandle};
 use rocket::request::{FromRequest, Outcome, Request};
 use sqlx::SqlitePool;
+use std::time::Duration;
 
 impl Services {
   async fn new(pool: SqlitePool) -> Services {
@@ -33,6 +35,15 @@ lazy_static! {
       init_data(&ret).await;
     }
     ret
+  });
+
+  pub static ref THREAD: AsyncOnce<ScheduleHandle> = AsyncOnce::new(async {
+    let services = SERVICES.get().await;
+    let mut scheduler = Scheduler::new();
+    scheduler.every(30.minutes()).run(move || {
+      services.subscription_service.load_subscription_items("");
+    });
+    scheduler.watch_thread(Duration::from_secs(60))
   });
 }
 
