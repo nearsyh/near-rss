@@ -15,6 +15,7 @@ impl From<Item> for ItemId {
     fn from(item: Item) -> ItemId {
         ItemId {
             id: item.id.to_string(),
+            // id: format!("tag:google.com,2005:reader/item/{:016x}", item.id),
             direct_stream_ids: vec![],
             timestamp_usec: (item.created_at_ms * 1000).to_string(),
         }
@@ -68,7 +69,7 @@ impl From<Item> for ItemContent {
         ItemContent {
             crawl_time_msec: item.fetched_at_ms.to_string(),
             timestamp_usec: (item.created_at_ms * 1000).to_string(),
-            id: item.id.to_string(),
+            id: format!("tag:google.com,2005:reader/item/{:016x}", item.id),
             categories: vec![
                 "user/-/state/com.google/reading-list".to_owned(),
                 "user/-/state/com.google/fresh".to_owned(),
@@ -201,6 +202,7 @@ impl StreamService for StreamServiceImpl {
         if ids.is_empty() {
             return Ok(());
         }
+        println!("Mark as read {}", ids.join(":"));
         self.item_repository
             .mark_items_as(user_id, ids, State::READ)
             .await

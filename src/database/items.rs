@@ -147,6 +147,15 @@ pub trait ItemRepository {
     async fn mark_older_as_read(&self, user_id: &str, older_than: i64) -> Result<()>;
 }
 
+fn id_str_to_i64(id: &str) -> i64 {
+    if id.starts_with("tag:google.com,2005:reader/item/") {
+        let id_hex = id.strip_prefix("tag:google.com,2005:reader/item/").unwrap();
+        i64::from_str_radix(id_hex, 16).unwrap_or(-1)
+    } else {
+        id.parse::<i64>().unwrap_or(-1)
+    } 
+}
+
 struct ItemRepositorySqlite {
     pool: SqlitePool,
 }
@@ -235,13 +244,8 @@ impl ItemRepository for ItemRepositorySqlite {
         let query_str = format!("{} AND ({})", base_query, conditions);
         let mut query = sqlx::query_as::<_, Item>(&query_str).bind(user_id);
         for id in ids {
-            query = match id.parse::<i64>() {
-                Ok(id_num) => query.bind(id_num),
-                Err(_) => match i64::from_str_radix(id, 16) {
-                    Ok(id_num) => query.bind(id_num),
-                    Err(_) => query.bind(-1),
-                }
-            };
+            println!("{} {}", id, id_str_to_i64(id));
+            query = query.bind(id_str_to_i64(id));
         }
         Ok(query.fetch_all(&self.pool).await?)
     }
@@ -364,12 +368,20 @@ impl ItemRepository for ItemRepositorySqlite {
             .map(|_| " id = ? ")
             .collect::<Vec<&str>>()
             .join("OR");
-        let query_str = format!("UPDATE Items SET {} = ? WHERE user_id = ? AND {}", state.column(), conditions);
+        let query_str = format!(
+            "UPDATE Items SET {} = ? WHERE user_id = ? AND {}",
+            state.column(),
+            conditions
+        );
         let mut query = sqlx::query(&query_str).bind(state.value()).bind(user_id);
         for id in ids {
-            query = query.bind(id);
+            query = query.bind(id_str_to_i64(id));
         }
         query.execute(&self.pool).await?;
+        let items = self.get_items_by_id(user_id, ids).await?;
+        for item in items {
+            println!("{:?}", item);
+        }
         Ok(())
     }
 
@@ -575,7 +587,7 @@ mod tests {
                 .unwrap()
                 .items,
             &items[2..]
-        ); 
+        );
         repository
             .mark_as(items[2].key(), State::UNREAD)
             .await

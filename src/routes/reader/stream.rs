@@ -117,20 +117,27 @@ pub async fn get_contents(
 ) -> Json<Contents> {
     let user = auth_user.user;
     let mut item_contents = match ids.i {
-        Some(ref i) => services
-            .stream_service
-            .get_item_contents(&user.id, i)
-            .await
-            .unwrap(),
+        Some(ref i) => {
+            let ids_in_hex = super::convert_to_long_form_ids(i);
+            println!("{}", ids_in_hex.join(","));
+            services
+                .stream_service
+                .get_item_contents(&user.id, &ids_in_hex.iter().map(|s| &**s).collect())
+                .await
+                .unwrap()
+        }
         None => vec![],
     };
+    println!("{}", item_contents.len());
     item_contents.sort_by(|a, b| b.published.cmp(&a.published));
-    Json(Contents {
+    let json = Json(Contents {
         direction: "ltr".to_string(),
         id: "user/-/state/com.google/reading-list".to_string(),
         title: "Reading List".to_string(),
         description: "Reading List".to_string(),
         updated: current_time_s() as u64,
         items: item_contents,
-    })
+    });
+    println!("{:?}", json);
+    json
 }
