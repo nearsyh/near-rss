@@ -29,7 +29,13 @@ impl From<crate::database::subscriptions::Subscription> for Subscription {
             .into_iter()
             .map(|category_str| Category {
                 id: String::from(category_str),
-                label: String::from(category_str.split("/").collect::<Vec<&str>>().pop().unwrap()),
+                label: String::from(
+                    category_str
+                        .split("/")
+                        .collect::<Vec<&str>>()
+                        .pop()
+                        .unwrap(),
+                ),
             })
             .collect();
         Subscription {
@@ -91,6 +97,8 @@ pub trait SubscriptionService {
     async fn list_subscriptions(&self, user_id: &str) -> Result<Vec<Subscription>>;
 
     async fn load_subscription_items(&self, user_id: &str) -> Result<()>;
+
+    async fn load_all_subscription_items(&self) -> Result<()>;
 
     async fn edit_subscription(
         &self,
@@ -187,6 +195,35 @@ impl SubscriptionService for SubscriptionServiceImpl {
                 Some(Ok(feed)) => {
                     self.item_repository
                         .insert_items(extract_items_from_feed(user_id, &subscription.id, feed))
+                        .await?;
+                }
+                _ => continue,
+            };
+        }
+        Ok(())
+    }
+
+    async fn load_all_subscription_items(&self) -> Result<()> {
+        let subscriptions = self
+            .subscription_repository
+            .list_all_subscriptions()
+            .await?;
+        let mut urls = subscriptions
+            .iter()
+            .map(|sub| -> &str { &sub.feed_url })
+            .collect::<Vec<&str>>();
+        urls.dedup();
+        let feeds = self.feed_service.get_feeds(urls).await;
+        for subscription in subscriptions {
+            let url = &subscription.feed_url;
+            match feeds.get(url) {
+                Some(Ok(feed)) => {
+                    self.item_repository
+                        .insert_items(extract_items_from_feed(
+                            &subscription.user_id,
+                            &subscription.id,
+                            feed,
+                        ))
                         .await?;
                 }
                 _ => continue,

@@ -39,11 +39,11 @@ lazy_static! {
   pub static ref THREAD: AsyncOnce<ScheduleHandle> = AsyncOnce::new(async {
     let services = SERVICES.get().await;
     let mut scheduler = Scheduler::new();
-    scheduler.every(10.minutes()).run(move || {
+    scheduler.every(10.seconds()).run(move || {
       println!("Refreshing");
       block_on(services.subscription_service.load_subscription_items("")).unwrap();
     });
-    scheduler.watch_thread(Duration::from_secs(60))
+    scheduler.watch_thread(Duration::from_secs(1))
   });
 }
 

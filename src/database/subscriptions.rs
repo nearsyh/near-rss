@@ -54,6 +54,7 @@ pub trait SubscriptionRepository {
     async fn remove_subscription(&self, user_id: &str, id: &str) -> Result<()>;
     async fn get_subscription(&self, user_id: &str, id: &str) -> Result<Option<Subscription>>;
     async fn list_user_subscriptions(&self, user_id: &str) -> Result<Vec<Subscription>>;
+    async fn list_all_subscriptions(&self) -> Result<Vec<Subscription>>;
 }
 
 struct SubscriptionRepositorySqlite {
@@ -159,6 +160,14 @@ impl SubscriptionRepository for SubscriptionRepositorySqlite {
         let subscriptions =
             sqlx::query_as::<_, Subscription>("SELECT * FROM Subscriptions WHERE user_id = ?")
                 .bind(user_id)
+                .fetch_all(&self.pool)
+                .await?;
+        Ok(subscriptions)
+    }
+
+    async fn list_all_subscriptions(&self) -> Result<Vec<Subscription>> {
+        let subscriptions =
+            sqlx::query_as::<_, Subscription>("SELECT * FROM Subscriptions")
                 .fetch_all(&self.pool)
                 .await?;
         Ok(subscriptions)

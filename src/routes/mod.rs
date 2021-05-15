@@ -1,4 +1,5 @@
 use rocket::response::Redirect;
+use crate::common::Services;
 
 pub mod accounts;
 pub mod reader;
@@ -12,4 +13,14 @@ pub fn unauthorized() -> &'static str {
 #[get("/")]
 pub fn index() -> Redirect {
     Redirect::to(uri!("/ui", ui::index::already_login))
+}
+
+#[get("/refresh")]
+pub async fn refresh(services: &Services) -> &'static str {
+    services
+        .subscription_service
+        .load_all_subscription_items()
+        .await
+        .unwrap();
+    "OK"
 }
