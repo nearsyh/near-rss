@@ -30,7 +30,12 @@ unsafe impl Sync for Services {}
 
 lazy_static! {
   pub static ref SERVICES: AsyncOnce<Services> = AsyncOnce::new(async {
-    let pool = crate::database::in_memory_pool().await;
+    let pool = if let Ok(db_path) = std::env::var("DB") {
+      crate::database::db_pool(&db_path).await
+    } else {
+      println!("Using inmemory dabase instance");
+      crate::database::in_memory_pool().await
+    };
     let ret = Services::new(pool).await;
     init_data(&ret).await;
     ret
