@@ -42,12 +42,12 @@ lazy_static! {
   });
   pub static ref THREAD: AsyncOnce<ScheduleHandle> = AsyncOnce::new(async {
     let mut scheduler = Scheduler::new();
-    scheduler.every(10.seconds()).run(move || {
+    scheduler.every(10.minutes()).run(move || {
     let endpoint = format!("{}/refresh", std::env::var("ENDPOINT").unwrap());
       println!("Refreshing {}", endpoint);
       reqwest::blocking::get(&endpoint).unwrap();
     });
-    scheduler.watch_thread(Duration::from_secs(1))
+    scheduler.watch_thread(Duration::from_secs(60))
   });
 }
 
