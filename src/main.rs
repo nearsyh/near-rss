@@ -44,7 +44,7 @@ async fn rocket() -> _ {
                 routes::ui::login::login_action,
             ],
         )
-        .mount("/", routes![routes::index])
+        .mount("/", routes![routes::index, routes::refresh])
         .attach(Template::fairing())
         .register("/", catchers![routes::unauthorized])
 }

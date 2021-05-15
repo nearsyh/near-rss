@@ -6,11 +6,11 @@ use crate::services::stream::new_stream_service;
 use crate::services::subscriptions::new_subscription_service;
 use crate::services::users::new_user_service;
 use async_once::AsyncOnce;
-use clokwerk::{Scheduler, TimeUnits, ScheduleHandle};
+use clokwerk::{ScheduleHandle, Scheduler, TimeUnits};
+use reqwest;
 use rocket::request::{FromRequest, Outcome, Request};
 use sqlx::SqlitePool;
 use std::time::Duration;
-use futures::executor::block_on;
 
 impl Services {
   async fn new(pool: SqlitePool) -> Services {
@@ -35,13 +35,12 @@ lazy_static! {
     init_data(&ret).await;
     ret
   });
-
   pub static ref THREAD: AsyncOnce<ScheduleHandle> = AsyncOnce::new(async {
-    let services = SERVICES.get().await;
     let mut scheduler = Scheduler::new();
     scheduler.every(10.seconds()).run(move || {
-      println!("Refreshing");
-      block_on(services.subscription_service.load_subscription_items("")).unwrap();
+    let endpoint = format!("{}/refresh", std::env::var("ENDPOINT").unwrap());
+      println!("Refreshing {}", endpoint);
+      reqwest::blocking::get(&endpoint).unwrap();
     });
     scheduler.watch_thread(Duration::from_secs(1))
   });
