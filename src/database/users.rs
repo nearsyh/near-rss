@@ -62,7 +62,8 @@ impl UserRepositorySqlite {
           id TEXT NOT NULL PRIMARY KEY,
           email TEXT NOT NULL,
           password_hash TEXT NOT NULL,
-          token TEXT)",
+          token TEXT,
+          UNIQUE(email))",
         )
         .execute(&pool)
         .await?;
@@ -73,8 +74,8 @@ impl UserRepositorySqlite {
 #[rocket::async_trait]
 impl UserRepository for UserRepositorySqlite {
     async fn create_user(&self, email: &str, password: &str) -> Result<Option<User>> {
-        if self.get_user_by_email(email).await?.is_some() {
-            return Ok(None);
+        if let Some(user) = self.get_user_by_email(email).await? {
+            return Ok(Some(user));
         }
         let new_user = User::new(&new_id(10), email, password);
         sqlx::query(
