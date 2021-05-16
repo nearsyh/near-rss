@@ -12,8 +12,6 @@ mod routes;
 mod services;
 use crate::middlewares::di::{SERVICES, THREAD};
 
-use rocket_contrib::templates::Template;
-
 #[launch]
 async fn rocket() -> _ {
     SERVICES.get().await;
@@ -34,17 +32,6 @@ async fn rocket() -> _ {
                 routes::reader::edit::edit_tag,
             ],
         )
-        .mount(
-            "/ui",
-            routes![
-                routes::ui::index::already_login,
-                routes::ui::index::not_login,
-                routes::ui::login::login,
-                routes::ui::login::login_with_creds,
-                routes::ui::login::login_action,
-            ],
-        )
-        .mount("/", routes![routes::index, routes::refresh])
-        .attach(Template::fairing())
+        .mount("/", routes![routes::refresh])
         .register("/", catchers![routes::unauthorized])
 }
