@@ -2,3 +2,4 @@
 .idea
 data.db*
 .vscode
+run.sh
