@@ -1,8 +1,8 @@
 use crate::common::Services;
 
 pub mod accounts;
-pub mod reader;
 pub mod api;
+pub mod reader;
 
 #[catch(403)]
 pub fn unauthorized() -> &'static str {
@@ -11,10 +11,15 @@ pub fn unauthorized() -> &'static str {
 
 #[get("/refresh")]
 pub async fn refresh(services: &Services) -> &'static str {
-    services
+    match services
         .subscription_service
         .load_all_subscription_items()
         .await
-        .unwrap();
-    "OK"
+    {
+        Ok(_) => "OK",
+        Err(err) => {
+            println!("{:?}", err);
+            "ERR"
+        }
+    }
 }

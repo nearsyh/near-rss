@@ -68,18 +68,11 @@ pub async fn get_item_ids(
             .get_starred_item_ids(&user.id, page_option)
             .await
             .unwrap(),
-        FilterType::UNREAD => {
-            services
-                .subscription_service
-                .load_subscription_items(&user.id)
-                .await
-                .unwrap();
-            services
-                .stream_service
-                .get_unread_item_ids(&user.id, page_option)
-                .await
-                .unwrap()
-        }
+        FilterType::UNREAD => services
+            .stream_service
+            .get_unread_item_ids(&user.id, page_option)
+            .await
+            .unwrap(),
         FilterType::READ => services
             .stream_service
             .get_read_item_ids(&user.id, page_option)
