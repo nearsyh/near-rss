@@ -2,6 +2,7 @@ use crate::common::Services;
 
 pub mod accounts;
 pub mod reader;
+pub mod api;
 
 #[catch(403)]
 pub fn unauthorized() -> &'static str {

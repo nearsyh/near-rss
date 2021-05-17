@@ -32,6 +32,10 @@ async fn rocket() -> _ {
                 routes::reader::edit::edit_tag,
             ],
         )
+        .mount(
+            "/api",
+            routes![routes::api::get_unread_items, routes::api::mark_as_read],
+        )
         .mount("/", routes![routes::refresh])
         .register("/", catchers![routes::unauthorized])
 }

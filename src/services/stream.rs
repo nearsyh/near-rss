@@ -104,6 +104,12 @@ pub trait StreamService {
         page_option: PageOption<String>,
     ) -> Result<Page<ItemId, String>>;
 
+    async fn get_unread_item_contents(
+        &self,
+        user_id: &str,
+        page_option: PageOption<String>,
+    ) -> Result<Page<ItemContent, String>>;
+
     async fn get_read_item_ids(
         &self,
         user_id: &str,
@@ -149,6 +155,18 @@ impl StreamService for StreamServiceImpl {
             .get_unread_items(user_id, page_option)
             .await?;
         Ok(page.convert::<ItemId, _>(|item| ItemId::from(item)))
+    }
+
+    async fn get_unread_item_contents(
+        &self,
+        user_id: &str,
+        page_option: PageOption<String>,
+    ) -> Result<Page<ItemContent, String>> {
+        let page = self
+            .item_repository
+            .get_unread_items(user_id, page_option)
+            .await?;
+        Ok(page.convert::<ItemContent, _>(|item| ItemContent::from(item)))
     }
 
     async fn get_read_item_ids(
