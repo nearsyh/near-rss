@@ -30,6 +30,11 @@ pub async fn get_unread_items(
     })
 }
 
+#[options("/unread")]
+pub async fn get_unread_items_options(_auth_user: AuthUser) -> &'static str {
+    ""
+}
+
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Ids {
@@ -41,4 +46,9 @@ pub async fn mark_as_read(auth_user: AuthUser, services: &Services, ids: Json<Id
     let str_ids = ids.ids.iter().map(|s| &**s).collect();
     services.stream_service.mark_as_read(&auth_user.user.id, &str_ids).await.unwrap();
     "OK"
+}
+
+#[options("/markAsRead")]
+pub async fn mark_as_read_options(_auth_user: AuthUser) -> &'static str {
+    ""
 }
