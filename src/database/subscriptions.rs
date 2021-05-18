@@ -1,6 +1,7 @@
 use crate::common::error::Errors;
 use anyhow::{Error, Result};
 use sqlx::SqlitePool;
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 #[derive(sqlx::FromRow, PartialEq, Eq, Debug, Clone)]
@@ -53,6 +54,11 @@ pub trait SubscriptionRepository {
     async fn update_subscription(&self, subscription: Subscription) -> Result<Subscription>;
     async fn remove_subscription(&self, user_id: &str, id: &str) -> Result<()>;
     async fn get_subscription(&self, user_id: &str, id: &str) -> Result<Option<Subscription>>;
+    async fn get_subscriptions(
+        &self,
+        user_id: &str,
+        ids: &Vec<&str>,
+    ) -> Result<HashMap<String, Subscription>>;
     async fn list_user_subscriptions(&self, user_id: &str) -> Result<Vec<Subscription>>;
     async fn list_all_subscriptions(&self) -> Result<Vec<Subscription>>;
 }
@@ -156,6 +162,29 @@ impl SubscriptionRepository for SubscriptionRepositorySqlite {
         Ok(subscription_opt)
     }
 
+    async fn get_subscriptions(
+        &self,
+        user_id: &str,
+        ids: &Vec<&str>,
+    ) -> Result<HashMap<String, Subscription>> {
+        let query_str = format!(
+            "SELECT * FROM Subscriptions WHERE user_id = ? AND ({})",
+            ids.iter()
+                .map(|_| "id = ?")
+                .collect::<Vec<&str>>()
+                .join(" OR ")
+        );
+        let mut query = sqlx::query_as::<_, Subscription>(&query_str).bind(user_id);
+        for id in ids {
+            query = query.bind(id);
+        }
+        let subscriptions = query.fetch_all(&self.pool).await?;
+        Ok(subscriptions
+            .into_iter()
+            .map(|sub| (sub.id.clone(), sub))
+            .collect())
+    }
+
     async fn list_user_subscriptions(&self, user_id: &str) -> Result<Vec<Subscription>> {
         let subscriptions =
             sqlx::query_as::<_, Subscription>("SELECT * FROM Subscriptions WHERE user_id = ?")
@@ -166,10 +195,9 @@ impl SubscriptionRepository for SubscriptionRepositorySqlite {
     }
 
     async fn list_all_subscriptions(&self) -> Result<Vec<Subscription>> {
-        let subscriptions =
-            sqlx::query_as::<_, Subscription>("SELECT * FROM Subscriptions")
-                .fetch_all(&self.pool)
-                .await?;
+        let subscriptions = sqlx::query_as::<_, Subscription>("SELECT * FROM Subscriptions")
+            .fetch_all(&self.pool)
+            .await?;
         Ok(subscriptions)
     }
 }

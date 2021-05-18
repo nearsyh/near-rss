@@ -83,7 +83,7 @@ impl Item {
             ret.push("user/-/state/com.google/fresh".to_owned());
         }
         if self.starred {
-            ret.push("user/-/state/com.google/starred".to_owned()); 
+            ret.push("user/-/state/com.google/starred".to_owned());
         }
         ret
     }
@@ -159,7 +159,7 @@ fn id_str_to_i64(id: &str) -> i64 {
         i64::from_str_radix(id_hex, 16).unwrap_or(-1)
     } else {
         id.parse::<i64>().unwrap_or(-1)
-    } 
+    }
 }
 
 struct ItemRepositorySqlite {

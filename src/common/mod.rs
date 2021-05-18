@@ -1,11 +1,11 @@
+pub mod debug;
 pub mod error;
 pub mod token;
-pub mod debug;
 
+use crate::services::stream::StreamService;
+use crate::services::subscriptions::SubscriptionService;
+use crate::services::users::UserService;
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::services::stream::{StreamService};
-use crate::services::subscriptions::{SubscriptionService};
-use crate::services::users::{UserService};
 
 pub struct PageOption<T> {
     pub offset: Option<T>,
@@ -77,4 +77,4 @@ pub struct Services {
     pub user_service: Box<dyn UserService + Send + Sync>,
     pub subscription_service: Box<dyn SubscriptionService + Send + Sync>,
     pub stream_service: Box<dyn StreamService + Send + Sync>,
-  }
+}

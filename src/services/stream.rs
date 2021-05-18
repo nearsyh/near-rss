@@ -1,5 +1,6 @@
 use crate::common::{Page, PageOption};
 use crate::database::items::{Item, ItemRepository, State};
+use crate::database::subscriptions::{Subscription, SubscriptionRepository};
 use anyhow::Result;
 use serde::Serialize;
 
@@ -64,8 +65,8 @@ pub struct ItemContent {
     pub origin: Origin,
 }
 
-impl From<Item> for ItemContent {
-    fn from(item: Item) -> ItemContent {
+impl ItemContent {
+    fn from(item: Item, sub: &Subscription) -> ItemContent {
         ItemContent {
             crawl_time_msec: item.fetched_at_ms.to_string(),
             timestamp_usec: (item.created_at_ms * 1000).to_string(),
@@ -89,8 +90,8 @@ impl From<Item> for ItemContent {
             author: item.author,
             origin: Origin {
                 stream_id: item.subscription_id,
-                title: "HN Daily".to_owned(),
-                html_url: "https://www.daemonology.net/".to_owned(),
+                title: sub.title.to_owned(),
+                html_url: sub.url.to_owned(),
             },
         }
     }
@@ -141,6 +142,7 @@ pub trait StreamService {
 
 struct StreamServiceImpl {
     item_repository: Box<dyn ItemRepository + Send + Sync>,
+    subscription_repository: Box<dyn SubscriptionRepository + Send + Sync>,
 }
 
 #[rocket::async_trait]
@@ -166,7 +168,19 @@ impl StreamService for StreamServiceImpl {
             .item_repository
             .get_unread_items(user_id, page_option)
             .await?;
-        Ok(page.convert::<ItemContent, _>(|item| ItemContent::from(item)))
+        let subscription_ids: Vec<&str> = page
+            .items
+            .iter()
+            .map(|item| &*item.subscription_id)
+            .collect();
+        let subscriptions = self
+            .subscription_repository
+            .get_subscriptions(user_id, &subscription_ids)
+            .await?;
+        Ok(page.convert::<ItemContent, _>(|item| {
+            let subscription = subscriptions.get(&item.subscription_id).unwrap();
+            ItemContent::from(item, subscription)
+        }))
     }
 
     async fn get_read_item_ids(
@@ -207,9 +221,17 @@ impl StreamService for StreamServiceImpl {
             return Ok(vec![]);
         }
         let items = self.item_repository.get_items_by_id(user_id, ids).await?;
+        let subscription_ids: Vec<&str> = items.iter().map(|item| &*item.subscription_id).collect();
+        let subscriptions = self
+            .subscription_repository
+            .get_subscriptions(user_id, &subscription_ids)
+            .await?;
         Ok(items
             .into_iter()
-            .map(|item| ItemContent::from(item))
+            .map(|item| {
+                let subscription = subscriptions.get(&item.subscription_id).unwrap();
+                ItemContent::from(item, subscription)
+            })
             .collect())
     }
 
@@ -251,9 +273,11 @@ impl StreamService for StreamServiceImpl {
 }
 
 pub fn new_stream_service(
-    repository: Box<dyn ItemRepository + Send + Sync>,
+    item_repository: Box<dyn ItemRepository + Send + Sync>,
+    subscription_repository: Box<dyn SubscriptionRepository + Send + Sync>,
 ) -> Box<dyn StreamService + Send + Sync> {
     Box::new(StreamServiceImpl {
-        item_repository: repository,
+        item_repository: item_repository,
+        subscription_repository: subscription_repository,
     })
 }
