@@ -168,6 +168,9 @@ impl StreamService for StreamServiceImpl {
             .item_repository
             .get_unread_items(user_id, page_option)
             .await?;
+        if page.items.len() == 0 {
+          return Ok(Page::empty());
+        }
         let subscription_ids: Vec<&str> = page
             .items
             .iter()
