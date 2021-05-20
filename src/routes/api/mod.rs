@@ -38,7 +38,7 @@ pub async fn get_unread_items(
 }
 
 #[options("/unread")]
-pub async fn get_unread_items_options(_auth_user: AuthUser) -> &'static str {
+pub async fn get_unread_items_options() -> &'static str {
     ""
 }
 
@@ -64,6 +64,6 @@ pub async fn mark_as_read(
 }
 
 #[options("/markAsRead")]
-pub async fn mark_as_read_options(_auth_user: AuthUser) -> &'static str {
+pub async fn mark_as_read_options() -> &'static str {
     ""
 }
