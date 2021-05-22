@@ -48,7 +48,9 @@ lazy_static! {
         scheduler.every(10.minutes()).run(move || {
             let endpoint = format!("{}/refresh", std::env::var("ENDPOINT").unwrap());
             println!("Refreshing {}", endpoint);
-            reqwest::blocking::get(&endpoint).unwrap();
+            if let Err(err) = reqwest::blocking::get(&endpoint) {
+                println!("Refreshing fails {:?}", err);
+            }
         });
         scheduler.watch_thread(Duration::from_secs(60))
     });
