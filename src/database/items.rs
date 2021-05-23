@@ -309,6 +309,9 @@ impl ItemRepository for ItemRepositorySqlite {
     }
 
     async fn insert_items(&self, mut items: Vec<Item>) -> Result<()> {
+        if items.is_empty() {
+            return Ok(());
+        }
         let base = String::from("
     INSERT INTO Items 
     (user_id, subscription_id, external_id, title, content, author, url, created_at_ms, fetched_at_ms, starred, read)
