@@ -1,4 +1,4 @@
-use crate::common::current_time_ms;
+use crate::common::{current_time_ms, oldest_allowed_time_ms};
 use crate::database::items::{Item, ItemRepository};
 use crate::database::subscriptions::SubscriptionRepository;
 use crate::services::feeds::{new_feed_service, FeedService};
@@ -138,6 +138,7 @@ fn extract_items_from_feed(user_id: &str, subscription_id: &str, feed: &Feed) ->
                     .map_or(current_time_ms(), |d| d.timestamp_millis()),
             )
         })
+        .filter(|item| item.created_at_ms > oldest_allowed_time_ms())
         .collect()
 }
 
