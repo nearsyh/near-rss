@@ -142,7 +142,7 @@ pub trait ItemRepository {
 
   async fn insert_items(&self, mut items: Vec<Item>) -> Result<()>;
 
-  async fn delete_items(&self, user_id: &str, earlier_than: i64) -> Result<()>;
+  async fn delete_items(&self, earlier_than: i64) -> Result<()>;
 
   async fn mark_as(&self, item_id: ItemId, state: State) -> Result<()>;
 
@@ -346,9 +346,8 @@ impl ItemRepository for ItemRepositorySqlite {
     Ok(())
   }
 
-  async fn delete_items(&self, user_id: &str, earlier_than: i64) -> Result<()> {
-    sqlx::query("DELETE FROM Items WHERE user_id = ? AND created_at_ms <= ?")
-      .bind(user_id)
+  async fn delete_items(&self, earlier_than: i64) -> Result<()> {
+    sqlx::query("DELETE FROM Items WHERE created_at_ms <= ?")
       .bind(earlier_than)
       .execute(&self.pool)
       .await?;
