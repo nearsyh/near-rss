@@ -2,10 +2,19 @@
 
 A self-hosted RSS server implementing Google-Reader API.
 
+The UI is a copy of the [stringer](https://github.com/swanson/stringer) project, plus a little more customizations.
+
+## Shortcuts
+
+* **j/k**: up or down.
+* **z**: mark all items above the current selected one as read.
+* **v**: open the item in a new browser tab.
+* **e**: expand the current selected item to see more details.
+
 ## Local test
 
 ```
-cargo run
+EMAIL="email" PASSWORD="password" ENDPOINT="http://localhost:8000" cargo run
 ```
 
 It will start both the server and the web-ui at localhost:8000. You can use `email` and `password` to login.
@@ -20,6 +29,18 @@ Then run the following commands to start your own instance.
 cargo build --release
 
 EMAIL="your-email" PASSWORD="your-password" DB="databasefile" ENDPOINT="your-server-address" ./target/release/near-rss
+```
+
+## Import your subscriptions
+
+```
+# you may need to install the 'requests' module
+
+export SUBS="your subscription OPML file"
+export SERVER="your server hostname"
+export EMAIL="your email"
+export PASSWORD="your password"
+python3 scripts/import.py $SUBS $SERVER $EMAIL $PASSWORD
 ```
 
 ## Customization
