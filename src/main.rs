@@ -12,9 +12,9 @@ mod routes;
 mod services;
 use crate::middlewares::di::{SERVICES, THREAD};
 use rocket::fairing::{Fairing, Info, Kind};
+use rocket::fs::{relative, FileServer};
 use rocket::http::{ContentType, Header, Method};
 use rocket::{Request, Response};
-use rocket::fs::{FileServer, relative};
 use std::io::Cursor;
 
 pub struct CORS();

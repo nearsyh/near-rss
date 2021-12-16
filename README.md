@@ -1,10 +1,18 @@
 # Near-RSS
 
-A self-hosted RSS server implementing Google-Reader API.
+A self-hosted RSS reader implementing Google-Reader API.
 
 The UI is a copy of the [stringer](https://github.com/swanson/stringer) project, plus a little more customizations.
 
 ![img](https://i.imgur.com/DDHwUTn.png)
+
+## Features
+
+1. A self-contained RSS reader, including
+   * a server, which manages your subscriptions and your read status.
+   * a user-friendly web-ui
+2. Implements Google-Reader API. You can use your favorite RSS client to connect your instance.
+3. A PWA which you can pin it in your mobile device without installing any app.
 
 ## Shortcuts
 
