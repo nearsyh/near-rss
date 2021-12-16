@@ -14,6 +14,7 @@ use crate::middlewares::di::{SERVICES, THREAD};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::{ContentType, Header, Method};
 use rocket::{Request, Response};
+use rocket_contrib::serve::{StaticFiles, crate_relative};
 use std::io::Cursor;
 
 pub struct CORS();
@@ -46,6 +47,7 @@ async fn rocket() -> _ {
     THREAD.get().await;
 
     rocket::build()
+        .mount("/", StaticFiles::from(crate_relative!("public")))
         .mount("/accounts", routes![routes::accounts::client_login])
         .mount(
             "/reader",

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <title>瞎读</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="description" content="瞎**读">
+    <meta name="theme-color" content="#F67100" />
+    <script src="javascripts/connector.js"></script>
+    <script src="javascripts/main.js"></script>
+    <script src="javascripts/state.js"></script>
+    <script src="javascripts/view.js"></script>
+    <script src="javascripts/control.js"></script>
+    <script src="javascripts/pwa.js"></script>
+    <script src="javascripts/awesomefont.js"></script>
+    <!-- <script src="https://use.fontawesome.com/9802efb3ed.js"></script> -->
+    <link rel="icon" href="/favicon.png">
+    <link rel="stylesheet" href="styles/styles.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;900&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" href="/icon_128.png">
+    <link rel="manifest" href="/manifest.json">
+</head>
+
+<body>
+    <div id="splash">
+        <div class="page-head">
+            <h1>Near <span class="orange">RSS</span></h1>
+        </div>
+        <div class="splasn-body">
+            <h2 id="loading-text" class="orange">Loading...</h2>
+        </div>
+    </div>
+    <div id="non-login-container" hidden>
+        <div class="page-head">
+            <h1>Near <span class="orange">RSS</span></h1>
+        </div>
+        <div class="input-container">
+            <input type="text" name="email" id="email" />
+            <label id="email-label" class="input-label" for="email">Email</label>
+        </div>
+        <div class="input-container">
+            <input type="password" name="password" id="password" />
+            <label id="password-label" class="input-label" for="password">Password</label>
+        </div>
+        <div class="input-container">
+            <button id="login">Login</button>
+        </div>
+    </div>
+    <div id="login-container" hidden>
+        <div id="menu">
+            <div id="menu-left">
+                <div class="button" id="mark-all-read">
+                    <i class="fa fa-check"></i>
+                </div>
+
+                <div class="button" id="refresh-content">
+                    <i class="fa fa-repeat"></i>
+                </div>
+            </div>
+            <div id="menu-right">
+                <div class="button" id="add-subscription">
+                    <i class="fa fa-plus"></i>
+                </div>
+            </div>
+        </div>
+        <div id="contents-container">
+            <div id="contents-list">
+
+            </div>
+        </div>
+    </div>
+
+    <div id="add-subscription-dialog" hidden>
+        <div class="input-container">
+            <input type="text" name="link" id="link" />
+            <label id="link-label" class="input-label" for="link">Link</label>
+        </div>
+
+        <div class="input-container">
+            <input type="text" name="title" id="title" />
+            <label id="title-label" class="input-label" for="title">Title</label>
+        </div>
+
+        <div class="input-container">
+            <input type="text" name="folder" id="folder" />
+            <label id="folder-label" class="input-label" for="folder">Folder</label>
+        </div>
+
+        <div class="input-container">
+            <button id="add">Add</button>
+        </div>
+    </div>
+</body>
+
+</html>

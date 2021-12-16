@@ -1,0 +1,253 @@
+:root {
+    --background-color: #FAF2E5;
+    --text-background-color: white;
+    --text-color: #112d4e;
+    --orange-color: #F67100;
+}
+
+body {
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 6px;
+    font-family: 'Lato';
+}
+
+#splash {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 350px;
+    margin: 0 auto;
+    padding-top: 120px;
+}
+
+#non-login-container {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 350px;
+    margin: 0 auto;
+    padding-top: 120px;
+}
+
+.page-head {
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.orange {
+    color: var(--orange-color);
+}
+
+.input-container {
+    width: 100%;
+    position: relative;
+    margin-bottom: 10px;
+    display: block;
+}
+
+input {
+    width: 210px;
+    height: 20px;
+    font-size: large;
+    padding: 8px 36px 9px 100px;
+    text-indent: 1px;
+    border: 2px solid #dce4ec;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.input-label {
+    color: #BFC9CA;
+    position: absolute;
+    left: 13px;
+    top: 10px;
+    transition: 0.25s;
+}
+
+button#login,
+button#add {
+    background-color: var(--orange-color);
+    color: white;
+    box-shadow: inset 0 -3px 0 rgb(0 0 0 / 12%);
+    border-radius: 6px;
+    font-family: 'Lato';
+    border: none;
+    width: 100%;
+    height: 40px;
+    padding: 10px;
+}
+
+#login-container {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 10px 0 10px;
+}
+
+#menu {
+    width: 100%;
+    max-width: 720px;
+    height: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+#menu-left {
+    height: 100%;
+    width: 50%;
+    display: flex;
+    flex-direction: row;
+}
+
+div.button {
+    border-bottom: 0px;
+    top: 0px;
+    position: relative;
+    border: none;
+    border-radius: 4px;
+    font-size: 16.5px;
+    width: 18px;
+    height: 18px;
+    padding: 6px 8px 8px 8px;
+    box-shadow: inset 0 -3px 0 rgb(0 0 0 / 12%);
+}
+
+#menu-left div.button {
+    background-color: #484948;
+    margin-right: 10px;
+}
+
+#menu-right div.button {
+    background-color: #F67100;
+}
+
+i.fa {
+    color: white;
+    line-height: 18px;
+    display: inline;
+    width: auto;
+    height: auto;
+    vertical-align: baseline;
+    background-position: 0 0;
+    background-repeat: repeat;
+    margin-top: 0;
+    margin-left: 1px;
+}
+
+i.fa-repeat {
+    margin-left: 2px;
+}
+
+i.fa-plus {
+    margin-left: 3px;
+}
+
+#contents-container {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    justify-content: center;
+    padding: 5px;
+    font: 14px/1.231 "Lato", sans-serif;
+}
+
+#contents-list {
+  width: 100%;
+}
+
+.item-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin: 7px 0;
+    line-height: 20px;
+    /* padding: 10px 15px; */
+    border-radius: 5px;
+    border: 3px solid white;
+    background-color: var(--text-background-color);
+    color: var(--text-color);
+}
+
+.item-head-container {
+    line-height: 30px;
+    height: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.item-body-container {
+    border-top: 3px solid var(--background-color);
+    padding: 10px 30px;
+}
+
+.item-body-container::before {
+    width: 100%;
+}
+
+.item-title {
+    width: 80%;
+    overflow: hidden;
+    /* margin-top: 12px; */
+    height: 30px;
+    background: linear-gradient(to right, black 30%, white);
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
+}
+
+.item-subscription-title {
+    width: 20%;
+    height: 30px;
+    overflow: hidden;
+    margin-left: 15px;
+    /* margin-top: 12px; */
+    background: linear-gradient(to right, black 50%, white);
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
+}
+
+.read {
+    opacity: 0.5;
+}
+
+.open {
+    border: 3px solid #484948;
+}
+
+.item-date {
+    width: 15%;
+    overflow: hidden;
+}
+
+#add-subscription-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    border-radius: 5px;
+}
+
+@media (min-width: 900px) {}
+
+@media (max-width: 900px) {
+    .item-subscription-title {
+        visibility: hidden;
+        display: none;
+    }
+    .item-title {
+        margin-left: 15px;
+        width: 100%;
+    }
+    .item-date {
+        visibility: hidden;
+        display: none;
+    }
+}
+
+img {
+    max-width: 100%;
+}

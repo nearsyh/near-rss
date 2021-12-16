@@ -8,7 +8,7 @@ pub async fn init_data(services: &super::Services) {
     if is_debug() {
         let user = services
             .user_service
-            .register("nearsy.h@gmail.com", "1234")
+            .register("email", "password")
             .await
             .unwrap();
         services
