@@ -5,6 +5,7 @@ pub mod token;
 use crate::services::stream::StreamService;
 use crate::services::subscriptions::SubscriptionService;
 use crate::services::users::UserService;
+use log::{info, error};
 use reqwest;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -80,9 +81,9 @@ pub fn oldest_allowed_time_ms() -> i64 {
 
 pub fn refresh() {
     let endpoint = format!("{}/refresh", std::env::var("ENDPOINT").unwrap());
-    println!("Refreshing {}", endpoint);
+    info!("Refreshing {}", endpoint);
     if let Err(err) = reqwest::blocking::get(&endpoint) {
-        println!("Refreshing fails {:?}", err);
+        error!("Refreshing fails {:?}", err);
     }
 }
 

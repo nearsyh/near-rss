@@ -7,6 +7,7 @@ use crate::services::subscriptions::new_subscription_service;
 use crate::services::users::new_user_service;
 use async_once::AsyncOnce;
 use clokwerk::{ScheduleHandle, Scheduler, TimeUnits};
+use log::warn;
 use rocket::request::{FromRequest, Outcome, Request};
 use sqlx::SqlitePool;
 use std::time::Duration;
@@ -35,7 +36,7 @@ lazy_static! {
         let pool = if let Ok(db_path) = std::env::var("DB") {
             crate::database::db_pool(&db_path).await
         } else {
-            println!("Using inmemory dabase instance");
+            warn!("Using inmemory dabase instance");
             crate::database::in_memory_pool().await
         };
         let ret = Services::new(pool).await;

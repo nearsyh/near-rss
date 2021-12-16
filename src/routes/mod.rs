@@ -1,3 +1,5 @@
+use log::error;
+
 use crate::common::Services;
 
 pub mod accounts;
@@ -12,7 +14,7 @@ pub fn unauthorized() -> &'static str {
 #[get("/refresh")]
 pub async fn refresh(services: &Services) -> &'static str {
     if let Err(err) = services.stream_service.clean_up().await {
-        println!("Clean up fails {:?}", err);
+        error!("Clean up old items failed {:?}", err);
     }
     match services
         .subscription_service
@@ -21,7 +23,7 @@ pub async fn refresh(services: &Services) -> &'static str {
     {
         Ok(_) => "OK",
         Err(err) => {
-            println!("{:?}", err);
+            error!("Load subscription items failed: {:?}", err);
             "ERR"
         }
     }
