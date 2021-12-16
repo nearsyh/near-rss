@@ -3,8 +3,9 @@ use crate::database::items::{Item, ItemRepository, State};
 use crate::database::subscriptions::{Subscription, SubscriptionRepository};
 use anyhow::Result;
 use serde::Serialize;
+use rocket::serde::Deserialize;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemId {
     pub id: String,

@@ -3,10 +3,11 @@ use crate::common::{current_time_s, Page, PageOption};
 use crate::middlewares::auth::AuthUser;
 use crate::services::stream::{ItemContent, ItemId};
 use rocket::form::Form;
-use rocket_contrib::json::Json;
+// use rocket::response::content::Json;
 use serde::Serialize;
+use rocket::serde::{Deserialize, json::Json};
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemIds {
     pub item_refs: Vec<ItemId>,

@@ -2,8 +2,8 @@ use crate::common::Services;
 use crate::middlewares::auth::AuthUser;
 use crate::services::subscriptions::Subscription;
 use rocket::form::Form;
-use rocket_contrib::json::Json;
 use serde::Serialize;
+use rocket::serde::{Deserialize, json::Json};
 
 #[derive(FromForm)]
 pub struct EditTagRequest<'r> {
@@ -12,7 +12,7 @@ pub struct EditTagRequest<'r> {
     pub r: Option<&'r str>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Subscriptions {
     subscriptions: Vec<Subscription>,
 }

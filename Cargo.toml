@@ -1,8 +1,8 @@
 [package]
 authors = ["Nearsyh <nearsyh@gmail.com>"]
-edition = "2021"
+edition = "2018"
 name = "near-rss"
-version = "0.2.0"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -22,8 +22,13 @@ log = "0.4"
 clokwerk = "0.3"
 
 [dependencies.rocket]
-git = "https://github.com/SergioBenitez/Rocket"
+version = "0.5.0-rc.1"
+features = ["json"]
+# rocket_contrib = "0.5"
 
-[dependencies.rocket_contrib]
-git = "https://github.com/SergioBenitez/Rocket"
-features = ["tera_templates"]
+# [dependencies.rocket]
+# git = "https://github.com/SergioBenitez/Rocket"
+
+# [dependencies.rocket_contrib]
+# git = "https://github.com/SergioBenitez/Rocket"
+# features = ["tera_templates"]

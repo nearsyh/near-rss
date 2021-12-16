@@ -5,14 +5,15 @@ use crate::services::feeds::{new_feed_service, FeedService};
 use anyhow::Result;
 use feed_rs::model::Feed;
 use serde::Serialize;
+use rocket::serde::Deserialize;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Category {
     pub id: String,
     pub label: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Subscription {
     pub id: String,
     pub title: String,

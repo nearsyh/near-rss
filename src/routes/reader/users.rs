@@ -1,8 +1,8 @@
 use crate::middlewares::auth::AuthUser;
-use rocket_contrib::json::Json;
 use serde::Serialize;
+use rocket::serde::{Deserialize, json::Json};
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserInfo {
     user_id: String,
