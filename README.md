@@ -4,6 +4,8 @@ A self-hosted RSS server implementing Google-Reader API.
 
 The UI is a copy of the [stringer](https://github.com/swanson/stringer) project, plus a little more customizations.
 
+![img](https://i.imgur.com/DDHwUTn.png)
+
 ## Shortcuts
 
 * **j/k**: up or down.
