@@ -7,19 +7,19 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-again = "0.1.2"
+again = "0.1"
 anyhow = "1.0"
-feed-rs = "0.6.0"
-futures = "0.3.14"
-reqwest = {version = "0.11.3", features = ["blocking", "json"]}
-serde = "1.0.125"
+feed-rs = "1.0"
+futures = "0.3"
+reqwest = {version = "0.11", features = ["blocking", "json"]}
+serde = "1.0"
 sqlx = {version = "0.5", features = ["runtime-tokio-rustls", "sqlite"]}
-rand = "0.8.3"
-thiserror = "1.0.24"
-async_once = "0.2.1"
-lazy_static = "1.4.0"
-log = "0.4.14"
-clokwerk = "0.3.5"
+rand = "0.8"
+thiserror = "1.0"
+async_once = "0.2"
+lazy_static = "1.4"
+log = "0.4"
+clokwerk = "0.3"
 
 [dependencies.rocket]
 git = "https://github.com/SergioBenitez/Rocket"
