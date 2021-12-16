@@ -56,3 +56,8 @@ python3 scripts/import.py $SUBS $SERVER $EMAIL $PASSWORD
 ## Customization
 
 You can customize the static resources in the public directory.
+
+## Some known issues
+
+* The code needs to polish. My rust skills was rusty when I wrote this. I'm getting better (I hope), but this project hasn't.
+* It can show already-read items some time if the subscription doesn't update frequently.
