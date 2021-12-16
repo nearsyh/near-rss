@@ -74,6 +74,14 @@ impl Item {
         }
     }
 
+    pub fn key(&self) -> ItemId {
+        ItemId {
+            user_id: self.user_id.clone(),
+            subscription_id: self.subscription_id.clone(),
+            id: self.id,
+        }
+    }
+
     pub fn categories(&self) -> Vec<String> {
         let mut ret = vec![];
         ret.push("user/-/state/com.google/reading-list".to_owned());

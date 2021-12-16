@@ -5,7 +5,7 @@ pub mod token;
 use crate::services::stream::StreamService;
 use crate::services::subscriptions::SubscriptionService;
 use crate::services::users::UserService;
-use log::{info, error};
+use log::{error, info};
 use reqwest;
 use std::time::{SystemTime, UNIX_EPOCH};
 

@@ -14,7 +14,7 @@ use crate::middlewares::di::{SERVICES, THREAD};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::{ContentType, Header, Method};
 use rocket::{Request, Response};
-use rocket_contrib::serve::{StaticFiles, crate_relative};
+use rocket_contrib::serve::{crate_relative, StaticFiles};
 use std::io::Cursor;
 
 pub struct CORS();
