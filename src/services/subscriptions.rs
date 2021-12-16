@@ -4,8 +4,7 @@ use crate::database::subscriptions::SubscriptionRepository;
 use crate::services::feeds::{new_feed_service, FeedService};
 use anyhow::Result;
 use feed_rs::model::Feed;
-use serde::Serialize;
-use rocket::serde::Deserialize;
+use rocket::serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Category {

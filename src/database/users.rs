@@ -157,9 +157,22 @@ mod tests {
     #[rocket::async_test]
     async fn create_users_with_same_emails_should_not_change_password() {
         let repository = new_user_repository(in_memory_pool().await).await.unwrap();
-        assert!(repository.create_user("email", "1").await.unwrap().is_some());
-        assert!(repository.create_user("email", "2").await.unwrap().is_some());
-        assert!(repository.get_user_by_email("email").await.unwrap().unwrap().match_password("1"));
+        assert!(repository
+            .create_user("email", "1")
+            .await
+            .unwrap()
+            .is_some());
+        assert!(repository
+            .create_user("email", "2")
+            .await
+            .unwrap()
+            .is_some());
+        assert!(repository
+            .get_user_by_email("email")
+            .await
+            .unwrap()
+            .unwrap()
+            .match_password("1"));
     }
 
     #[rocket::async_test]

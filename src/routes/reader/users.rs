@@ -1,6 +1,5 @@
 use crate::middlewares::auth::AuthUser;
-use serde::Serialize;
-use rocket::serde::{Deserialize, json::Json};
+use rocket::serde::{json::Json, Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
