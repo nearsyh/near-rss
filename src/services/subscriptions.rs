@@ -120,6 +120,10 @@ fn extract_items_from_feed(user_id: &str, subscription_id: &str, feed: &Feed) ->
     feed.entries
         .iter()
         .map(|entry| {
+            let created_at_ms = entry
+                .published
+                .or(entry.updated)
+                .map_or(current_time_ms(), |d| d.timestamp_millis());
             Item::new_item(
                 user_id,
                 subscription_id,
@@ -133,9 +137,7 @@ fn extract_items_from_feed(user_id: &str, subscription_id: &str, feed: &Feed) ->
                     .collect::<Vec<&str>>()
                     .join(","),
                 &entry.links[0].href,
-                entry
-                    .published
-                    .map_or(current_time_ms(), |d| d.timestamp_millis()),
+                created_at_ms,
             )
         })
         .filter(|item| item.created_at_ms > oldest_allowed_time_ms())
