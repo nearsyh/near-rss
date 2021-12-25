@@ -1,13 +1,13 @@
-function showLoadingView(text = undefined) {
+function showSplash(text) {
     hideElementById('non-login-container');
     hideElementById('login-container');
     document.getElementById('add-subscription-dialog').hidden = true;
-    if (text) {
-        document.getElementById('loading-text').textContent = text;
-    } else {
-        document.getElementById('loading-text').textContent = "Loading...";
-    }
+    document.getElementById('splash-text').textContent = text;
     showElementById('splash');
+}
+
+function showLoadingView() {
+   showSplash("Loading...");
 }
 
 function hideLoadingView() {
@@ -50,9 +50,7 @@ function renderItems() {
             itemsListContainer.appendChild(constructItemView(item));
         }
     } else {
-        let noItems = document.createElement('div');
-        noItems.textContent = "Nothing left";
-        itemsListContainer.appendChild(noItems);
+        showSplash("Nothing Left");
     }
 }
 

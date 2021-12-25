@@ -55,7 +55,7 @@ function initializeMenuButtons() {
 
     document.getElementById('add').addEventListener('click', async function(event) {
         document.getElementById('add-subscription-dialog').hidden = true;
-        showLoadingView("Adding Subscription...");
+        showSplash("Adding Subscription...");
         await addSubscription(
             document.getElementById('link').value,
             document.getElementById('title').value,
