@@ -2,8 +2,10 @@
 extern crate rocket;
 
 use near_rss::create;
+use near_rss::configuration::get_configuration;
 
 #[launch]
 async fn rocket() -> _ {
-    create().await
+    let configuration = get_configuration().expect("Failed to get configuration.");
+    create(&configuration).await
 }

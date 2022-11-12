@@ -13,7 +13,7 @@ use sqlx::SqlitePool;
 use std::time::Duration;
 
 impl Services {
-    async fn new(pool: SqlitePool) -> Services {
+    pub async fn new(pool: SqlitePool) -> Services {
         Services {
             user_service: new_user_service(new_user_repository(pool.clone()).await.unwrap()),
             subscription_service: new_subscription_service(

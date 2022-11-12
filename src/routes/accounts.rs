@@ -1,6 +1,7 @@
 use crate::common::Services;
 use rocket::form::Form;
 use rocket::response::status::Forbidden;
+use rocket::State;
 
 #[derive(FromForm)]
 pub struct LoginRequest {
@@ -13,7 +14,7 @@ pub struct LoginRequest {
 #[post("/ClientLogin", data = "<request>")]
 pub async fn client_login(
     request: Form<LoginRequest>,
-    services: &Services,
+    services: &State<Services>,
 ) -> Result<String, Forbidden<String>> {
     match services
         .user_service

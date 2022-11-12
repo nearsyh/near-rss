@@ -10,12 +10,17 @@ mod database;
 mod middlewares;
 mod routes;
 mod services;
+pub mod configuration;
+
 use crate::middlewares::di::{SERVICES, THREAD};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::fs::{relative, FileServer};
 use rocket::http::{ContentType, Header, Method};
 use rocket::{Build, Request, Response, Rocket};
 use std::io::Cursor;
+use sqlx::sqlite::SqlitePoolOptions;
+use crate::common::Services;
+use crate::configuration::Configuration;
 
 pub struct CORS();
 
@@ -41,9 +46,12 @@ impl Fairing for CORS {
     }
 }
 
-pub async fn create() -> Rocket<Build> {
+pub async fn create(configuration: &Configuration) -> Rocket<Build> {
     SERVICES.get().await;
     THREAD.get().await;
+
+    let sqlite_pool = SqlitePoolOptions::new().connect_lazy_with(configuration.database.connect_options());
+    let services = Services::new(sqlite_pool).await;
 
     rocket::build()
         .mount("/", FileServer::from(relative!("public")))
@@ -76,4 +84,5 @@ pub async fn create() -> Rocket<Build> {
         .mount("/", routes![routes::refresh])
         .attach(CORS())
         .register("/", catchers![routes::unauthorized])
+        .manage(services)
 }
