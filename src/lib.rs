@@ -16,8 +16,9 @@ use crate::middlewares::di::{SERVICES, THREAD};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::fs::{relative, FileServer};
 use rocket::http::{ContentType, Header, Method};
-use rocket::{Build, Request, Response, Rocket};
+use rocket::{Build, Config, Request, Response, Rocket};
 use std::io::Cursor;
+use std::net::IpAddr;
 use sqlx::sqlite::SqlitePoolOptions;
 use crate::common::Services;
 use crate::configuration::Configuration;
@@ -53,7 +54,13 @@ pub async fn create(configuration: &Configuration) -> Rocket<Build> {
     let sqlite_pool = SqlitePoolOptions::new().connect_lazy_with(configuration.database.connect_options());
     let services = Services::new(sqlite_pool).await;
 
-    rocket::build()
+    let config = Config {
+        port: configuration.application.port,
+        address: configuration.application.host.parse::<IpAddr>().expect("Failed to parse host address"),
+        ..Config::debug_default()
+    };
+
+    rocket::custom(config)
         .mount("/", FileServer::from(relative!("public")))
         .mount("/accounts", routes![routes::accounts::client_login])
         .mount(
