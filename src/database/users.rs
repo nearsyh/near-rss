@@ -57,17 +57,7 @@ unsafe impl Sync for UserRepositorySqlite {}
 
 impl UserRepositorySqlite {
     pub async fn new(pool: SqlitePool) -> Result<UserRepositorySqlite> {
-        sqlx::query(
-            "CREATE TABLE IF NOT EXISTS Users (
-          id TEXT NOT NULL PRIMARY KEY,
-          email TEXT NOT NULL,
-          password_hash TEXT NOT NULL,
-          token TEXT,
-          UNIQUE(email))",
-        )
-        .execute(&pool)
-        .await?;
-        Ok(UserRepositorySqlite { pool: pool })
+        Ok(UserRepositorySqlite { pool })
     }
 }
 

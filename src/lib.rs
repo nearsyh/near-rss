@@ -6,22 +6,23 @@ extern crate rocket;
 extern crate lazy_static;
 
 mod common;
-mod database;
+pub mod configuration;
+pub mod database;
 mod middlewares;
 mod routes;
 mod services;
-pub mod configuration;
 
+use crate::common::Services;
+use crate::configuration::Configuration;
 use crate::middlewares::di::{SERVICES, THREAD};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::fs::{relative, FileServer};
 use rocket::http::{ContentType, Header, Method};
 use rocket::{Build, Config, Request, Response, Rocket};
+use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::SqlitePool;
 use std::io::Cursor;
 use std::net::IpAddr;
-use sqlx::sqlite::SqlitePoolOptions;
-use crate::common::Services;
-use crate::configuration::Configuration;
 
 pub struct CORS();
 
@@ -47,20 +48,30 @@ impl Fairing for CORS {
     }
 }
 
-pub async fn create(configuration: &Configuration) -> Rocket<Build> {
+pub struct App {
+    pub rocket: Rocket<Build>,
+    pub pool: SqlitePool,
+}
+
+pub async fn create(configuration: &Configuration) -> App {
     SERVICES.get().await;
     THREAD.get().await;
 
-    let sqlite_pool = SqlitePoolOptions::new().connect_lazy_with(configuration.database.connect_options());
-    let services = Services::new(sqlite_pool).await;
+    let sqlite_pool =
+        SqlitePoolOptions::new().connect_lazy_with(configuration.database.connect_options());
+    let services = Services::new(sqlite_pool.clone()).await;
 
     let config = Config {
         port: configuration.application.port,
-        address: configuration.application.host.parse::<IpAddr>().expect("Failed to parse host address"),
+        address: configuration
+            .application
+            .host
+            .parse::<IpAddr>()
+            .expect("Failed to parse host address"),
         ..Config::debug_default()
     };
 
-    rocket::custom(config)
+    let rocket = rocket::custom(config)
         .mount("/", FileServer::from(relative!("public")))
         .mount("/accounts", routes![routes::accounts::client_login])
         .mount(
@@ -91,5 +102,9 @@ pub async fn create(configuration: &Configuration) -> Rocket<Build> {
         .mount("/", routes![routes::refresh])
         .attach(CORS())
         .register("/", catchers![routes::unauthorized])
-        .manage(services)
+        .manage(services);
+    App {
+        rocket,
+        pool: sqlite_pool,
+    }
 }

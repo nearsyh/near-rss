@@ -1,14 +1,50 @@
-use std::str::FromStr;
-use reqwest::Client;
-use reqwest::redirect::Policy;
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
-use near_rss::configuration::{Configuration, get_configuration};
+use near_rss::configuration::{get_configuration, Configuration};
 use near_rss::create;
+use near_rss::database::users::User;
+use reqwest::redirect::Policy;
+use reqwest::Client;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::SqlitePool;
+use std::str::FromStr;
+use uuid::Uuid;
+
+pub struct TestUser {
+    pub email: String,
+    pub password: String,
+}
+
+impl TestUser {
+    pub fn generate() -> Self {
+        Self {
+            email: format!("{}@gmail.com", Uuid::new_v4().to_string()),
+            password: "password".into(),
+        }
+    }
+
+    pub async fn store(&self, pool: &SqlitePool) {
+        let user = User::new(&Uuid::new_v4().to_string(), &self.email, &self.password);
+        sqlx::query!(
+            r#"
+            INSERT INTO Users
+                (id, email, password_hash, token)
+            VALUES(?, ?, ?, ?)
+            "#,
+            user.id,
+            user.email,
+            user.password_hash,
+            user.token
+        )
+        .execute(pool)
+        .await
+        .expect("Failed to store test user.");
+    }
+}
 
 pub struct TestApp {
     pub port: u16,
     pub address: String,
     pub api_client: Client,
+    pub test_user: TestUser,
 }
 
 impl TestApp {
@@ -26,12 +62,20 @@ impl TestApp {
 }
 
 pub async fn spawn_app() -> TestApp {
-    let configuration = get_configuration().expect("Failed to get configuration.");
+    let configuration = {
+        let mut c = get_configuration().expect("Failed to get configuration.");
+        c.application.port = portpicker::pick_unused_port().expect("No free ports");
+        c
+    };
+    println!("Port: {}", configuration.application.port);
 
-    let rocket = create(&configuration).await;
-    let _ = tokio::spawn(rocket.launch());
+    let app = create(&configuration).await;
+    let _ = tokio::spawn(app.rocket.launch());
     // TODO: why do this this before creating rocket works?
-    configure_database(&configuration).await;
+    configure_database(&app.pool).await;
+
+    let test_user = TestUser::generate();
+    test_user.store(&app.pool).await;
 
     let client = Client::builder()
         .redirect(Policy::none())
@@ -43,15 +87,13 @@ pub async fn spawn_app() -> TestApp {
         port: configuration.application.port,
         address: format!("http://127.0.0.1:{}", configuration.application.port),
         api_client: client,
+        test_user,
     }
 }
 
-async fn configure_database(configuration: &Configuration) {
-    let option = SqliteConnectOptions::from_str("sqlite::memory:")
-        .expect("Failed to create connect options");
-    let sqlite_pool = SqlitePoolOptions::new().connect_lazy_with(option);
+async fn configure_database(pool: &SqlitePool) {
     sqlx::migrate!("./migrations")
-        .run(&sqlite_pool)
+        .run(pool)
         .await
         .expect("Failed to migrate the database.");
 }

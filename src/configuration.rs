@@ -1,6 +1,6 @@
-use std::str::FromStr;
 use serde_aux::field_attributes::deserialize_number_from_string;
 use sqlx::sqlite::SqliteConnectOptions;
+use std::str::FromStr;
 
 #[derive(serde::Deserialize, Clone)]
 pub struct Configuration {
@@ -43,7 +43,9 @@ impl DatabaseConfiguration {
     pub fn connect_options(&self) -> SqliteConnectOptions {
         let db = format!("sqlite:{}", self.path);
         SqliteConnectOptions::from_str(&db)
-            .expect(&format!("Failed to create Sqlite connect options with {db}"))
+            .expect(&format!(
+                "Failed to create Sqlite connect options with {db}"
+            ))
             .create_if_missing(true)
     }
 }

@@ -49,3 +49,5 @@ features = [
 
 [dev-dependencies]
 serde_json = "1"
+uuid = { version = "0.8", features = ["v4", "serde"] }
+portpicker = "0.1"
