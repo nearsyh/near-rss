@@ -3,9 +3,7 @@ use near_rss::database::users::User;
 use near_rss::Application;
 use reqwest::redirect::Policy;
 use reqwest::Client;
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::SqlitePool;
-use std::str::FromStr;
 use uuid::Uuid;
 
 pub struct TestUser {
@@ -62,15 +60,25 @@ impl TestApp {
 }
 
 pub async fn spawn_app() -> TestApp {
+    spawn_app_by_type(true).await
+}
+
+pub async fn spawn_app_by_type(use_actix: bool) -> TestApp {
     let configuration = {
         let mut c = get_configuration().expect("Failed to get configuration.");
         c.application.port = 0;
         c
     };
 
-    let app = Application::create_actix_server(&configuration)
-        .await
-        .expect("Failed to create actix server");
+    let app = if use_actix {
+        Application::create_actix_server(&configuration)
+            .await
+            .expect("Failed to create actix server")
+    } else {
+        Application::create_rocket_server(&configuration)
+            .await
+            .expect("Failed to create rocket server")
+    };
     let port = app.port;
 
     configure_database(&app.pool).await;
