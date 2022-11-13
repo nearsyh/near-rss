@@ -57,6 +57,14 @@ impl TestApp {
             .await
             .expect("Failed to execute request.")
     }
+
+    pub async fn get_index(&self) -> reqwest::Response {
+        self.api_client
+            .get(format!("{}/index.html", self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
 }
 
 pub async fn spawn_app() -> TestApp {

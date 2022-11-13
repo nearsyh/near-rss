@@ -19,7 +19,6 @@ use actix_web::dev::Server;
 use actix_web::{web, App, HttpServer};
 use anyhow::{Context, Result};
 use rocket::fairing::{Fairing, Info, Kind};
-use rocket::fs::{relative, FileServer};
 use rocket::http::{ContentType, Header, Method};
 use rocket::{Build, Config, Request, Response, Rocket};
 use sqlx::sqlite::SqlitePoolOptions;
@@ -64,6 +63,9 @@ pub struct Application {
 
 impl Application {
     pub async fn create_rocket_server(configuration: &Configuration) -> Result<Application> {
+        SERVICES.get().await;
+        THREAD.get().await;
+
         let sqlite_pool =
             SqlitePoolOptions::new().connect_lazy_with(configuration.database.connect_options());
         let services = Services::new(sqlite_pool.clone()).await;
@@ -79,7 +81,6 @@ impl Application {
         };
 
         let rocket = rocket::custom(config)
-            .mount("/", FileServer::from(relative!("public")))
             .mount(
                 "/reader",
                 routes![
@@ -117,6 +118,9 @@ impl Application {
     }
 
     pub async fn create_actix_server(configuration: &Configuration) -> Result<Application> {
+        SERVICES.get().await;
+        THREAD.get().await;
+
         let sqlite_pool =
             SqlitePoolOptions::new().connect_lazy_with(configuration.database.connect_options());
         let services = web::Data::new(Services::new(sqlite_pool.clone()).await);
@@ -134,6 +138,7 @@ impl Application {
                     "/ClientLogin",
                     web::post().to(routes::accounts::client_login),
                 ))
+                .service(actix_files::Files::new("/", "./public"))
                 .app_data(services.clone())
         })
         .listen(listener)?

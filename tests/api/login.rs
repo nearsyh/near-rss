@@ -1,5 +1,4 @@
 use crate::helpers::spawn_app;
-use std::thread::sleep;
 
 #[tokio::test]
 async fn unknown_user_login_return_403() {
