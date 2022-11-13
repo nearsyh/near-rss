@@ -1,30 +1,27 @@
 use crate::common::Services;
-use rocket::form::Form;
+use actix_web::{web, HttpResponse};
 use rocket::response::status::Forbidden;
-use rocket::State;
 
-#[derive(FromForm)]
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub struct LoginRequest {
-    #[field(name = "Email")]
     email: String,
-    #[field(name = "Passwd")]
-    password: String,
+    passwd: String,
 }
 
-#[post("/ClientLogin", data = "<request>")]
 pub async fn client_login(
-    request: Form<LoginRequest>,
-    services: &State<Services>,
-) -> Result<String, Forbidden<String>> {
+    request: web::Form<LoginRequest>,
+    services: web::Data<Services>,
+) -> HttpResponse {
     match services
         .user_service
-        .login(&request.email, &request.password)
+        .login(&request.email, &request.passwd)
         .await
     {
-        Ok(ref creds) => Ok(format!(
+        Ok(ref creds) => HttpResponse::Ok().body(format!(
             "SID={}\nLSID={}\nAuth={}",
             creds.sid, creds.lsid, creds.cltoken
         )),
-        Err(_) => Err(Forbidden(Some(String::from("Error=BadAuthentication")))),
+        Err(_) => HttpResponse::Forbidden().body("Error=BadAuthentication"),
     }
 }

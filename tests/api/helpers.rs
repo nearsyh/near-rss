@@ -1,6 +1,6 @@
 use near_rss::configuration::{get_configuration, Configuration};
-use near_rss::create;
 use near_rss::database::users::User;
+use near_rss::Application;
 use reqwest::redirect::Policy;
 use reqwest::Client;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
@@ -64,18 +64,20 @@ impl TestApp {
 pub async fn spawn_app() -> TestApp {
     let configuration = {
         let mut c = get_configuration().expect("Failed to get configuration.");
-        c.application.port = portpicker::pick_unused_port().expect("No free ports");
+        c.application.port = 0;
         c
     };
-    println!("Port: {}", configuration.application.port);
 
-    let app = create(&configuration).await;
-    let _ = tokio::spawn(app.rocket.launch());
-    // TODO: why do this this before creating rocket works?
+    let app = Application::create_actix_server(&configuration)
+        .await
+        .expect("Failed to create actix server");
+    let port = app.port;
+
     configure_database(&app.pool).await;
-
     let test_user = TestUser::generate();
     test_user.store(&app.pool).await;
+
+    let _ = tokio::spawn(app.run_until_stopped());
 
     let client = Client::builder()
         .redirect(Policy::none())
@@ -84,8 +86,8 @@ pub async fn spawn_app() -> TestApp {
         .unwrap();
 
     TestApp {
-        port: configuration.application.port,
-        address: format!("http://127.0.0.1:{}", configuration.application.port),
+        port,
+        address: format!("http://127.0.0.1:{}", port),
         api_client: client,
         test_user,
     }
