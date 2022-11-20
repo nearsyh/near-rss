@@ -1,6 +1,7 @@
 use near_rss::configuration::{get_configuration, Configuration};
 use near_rss::database::users::User;
 use near_rss::Application;
+use reqwest::header::AUTHORIZATION;
 use reqwest::redirect::Policy;
 use reqwest::Client;
 use sqlx::SqlitePool;
@@ -43,6 +44,7 @@ pub struct TestApp {
     pub address: String,
     pub api_client: Client,
     pub test_user: TestUser,
+    pub token: Option<String>,
 }
 
 impl TestApp {
@@ -52,6 +54,42 @@ impl TestApp {
             .form(&serde_json::json!({
                 "Email": email,
                 "Passwd": password
+            }))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn test_user_login(&mut self) {
+        let response = self
+            .login(&self.test_user.email, &self.test_user.password)
+            .await;
+        self.token = Some(response.text().await.unwrap());
+    }
+
+    pub fn test_user_logout(&mut self) {
+        self.token.take();
+    }
+
+    pub async fn add_subscription(
+        &self,
+        link: &str,
+        title: Option<&str>,
+        folder: Option<&str>,
+    ) -> reqwest::Response {
+        self.api_client
+            .post(format!("{}/api/addSubscription", self.address))
+            .header(
+                AUTHORIZATION,
+                self.token
+                    .as_ref()
+                    .map(|t| format!("GoogleLogin auth={}", t))
+                    .unwrap_or("".into()),
+            )
+            .json(&serde_json::json!({
+                "link": link,
+                "title": title,
+                "folder": folder
             }))
             .send()
             .await
@@ -106,6 +144,7 @@ pub async fn spawn_app_by_type(use_actix: bool) -> TestApp {
         address: format!("http://127.0.0.1:{}", port),
         api_client: client,
         test_user,
+        token: None,
     }
 }
 
