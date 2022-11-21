@@ -2,7 +2,7 @@ use crate::helpers::{spawn_app, spawn_app_by_type};
 
 #[tokio::test]
 async fn anonymous_add_subscription_should_fail() {
-    let app = spawn_app_by_type(false).await;
+    let app = spawn_app().await;
 
     let response = app.add_subscription("link", None, None).await;
 
@@ -12,7 +12,7 @@ async fn anonymous_add_subscription_should_fail() {
 
 #[tokio::test]
 async fn add_new_subscription() {
-    let mut app = spawn_app_by_type(false).await;
+    let mut app = spawn_app().await;
     app.test_user_login().await;
 
     let response = app

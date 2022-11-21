@@ -4,7 +4,7 @@ use anyhow::Result;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
 
-#[derive(sqlx::FromRow, PartialEq, Eq, Debug)]
+#[derive(sqlx::FromRow, PartialEq, Eq, Debug, Clone)]
 pub struct User {
     pub id: String,
     pub email: String,

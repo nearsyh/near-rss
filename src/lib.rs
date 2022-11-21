@@ -14,9 +14,11 @@ mod services;
 
 use crate::common::Services;
 use crate::configuration::Configuration;
+use crate::middlewares::auth::reject_anonymous_user;
 use crate::middlewares::di::{SERVICES, THREAD};
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpServer};
+use actix_web_lab::middleware::from_fn;
 use anyhow::{Context, Result};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::{ContentType, Header, Method};
@@ -102,7 +104,7 @@ impl Application {
                     routes::api::get_unread_items_options,
                     routes::api::mark_as_read,
                     routes::api::mark_as_read_options,
-                    routes::api::add_subscription,
+                    routes::api::old_add_subscription,
                     routes::api::add_subscription_options,
                 ],
             )
@@ -119,9 +121,6 @@ impl Application {
     }
 
     pub async fn create_actix_server(configuration: &Configuration) -> Result<Application> {
-        // SERVICES.get().await;
-        // THREAD.get().await;
-
         let sqlite_pool =
             SqlitePoolOptions::new().connect_lazy_with(configuration.database.connect_options());
         let services = web::Data::new(Services::new(sqlite_pool.clone()).await);
@@ -135,12 +134,21 @@ impl Application {
 
         let server = HttpServer::new(move || {
             App::new()
+                .app_data(services.clone())
                 .service(web::scope("/accounts").route(
                     "/ClientLogin",
                     web::post().to(routes::accounts::client_login),
                 ))
+                .service(
+                    web::scope("/api")
+                        .wrap(from_fn(reject_anonymous_user))
+                        .app_data(services.clone())
+                        .route(
+                            "/addSubscription",
+                            web::post().to(routes::api::add_subscription),
+                        ),
+                )
                 .service(actix_files::Files::new("/", "./public"))
-                .app_data(services.clone())
         })
         .listen(listener)?
         .run();

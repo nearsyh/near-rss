@@ -1,6 +1,7 @@
 use crate::common::{PageOption, Services};
 use crate::middlewares::auth::AuthUser;
 use crate::services::stream::ItemContent;
+use actix_web::web;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 
 #[derive(Serialize, Debug)]
@@ -76,10 +77,41 @@ pub struct SubscriptionData {
 }
 
 #[post("/addSubscription", data = "<subscription>")]
-pub async fn add_subscription(
+pub async fn old_add_subscription(
     auth_user: AuthUser,
     services: &Services,
     subscription: Json<SubscriptionData>,
+) -> &'static str {
+    let added = services
+        .subscription_service
+        .add_subscription_from_url(&auth_user.user.id, &subscription.link)
+        .await
+        .unwrap();
+    if let Some(ref f) = subscription.folder {
+        let tag = format!("user/-/label/{}", f);
+        let title: Option<&str> = if subscription.title.is_some() {
+            Some(&**subscription.title.as_ref().unwrap())
+        } else {
+            None
+        };
+        services
+            .subscription_service
+            .edit_subscription(&auth_user.user.id, &added.id, &title, &vec![&tag], &vec![])
+            .await
+            .unwrap();
+    }
+    services
+        .subscription_service
+        .load_all_subscription_items()
+        .await
+        .unwrap();
+    "OK"
+}
+
+pub async fn add_subscription(
+    auth_user: web::ReqData<AuthUser>,
+    services: web::Data<Services>,
+    subscription: web::Json<SubscriptionData>,
 ) -> &'static str {
     let added = services
         .subscription_service
