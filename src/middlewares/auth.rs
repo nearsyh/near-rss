@@ -1,8 +1,9 @@
 use super::di::SERVICES;
-use crate::common::{debug::get_user_token, debug::is_debug, token::Token};
+use crate::common::{debug::get_user_token, debug::is_debug, token::Token, Services};
 use crate::database::users::User;
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome, Request};
+use rocket::State;
 
 #[derive(Debug)]
 pub enum AuthError {
@@ -12,15 +13,16 @@ pub enum AuthError {
 }
 
 async fn extract_authorization(req: &Request<'_>) -> Option<String> {
+    let services = req.guard::<&State<Services>>().await.unwrap();
     if is_debug() {
-        let token = get_user_token(SERVICES.get().await).await;
+        let token = get_user_token(services).await;
         return Some(format!("GoogleLogin auth={}", token));
     }
     match req.headers().get_one("Authorization") {
         Some(authorization) => Some(authorization.to_owned()),
         None => {
             if is_debug() {
-                let token = get_user_token(SERVICES.get().await).await;
+                let token = get_user_token(services).await;
                 Some(format!("GoogleLogin auth={}", token))
             } else {
                 None
@@ -49,7 +51,8 @@ impl<'r> FromRequest<'r> for AuthUser {
                     if !Token::is_valid(&token) {
                         return Outcome::Failure((Status::Forbidden, AuthError::InvalidToken));
                     }
-                    match SERVICES.get().await.user_service.get_user(token).await {
+                    let services = req.guard::<&State<Services>>().await.unwrap();
+                    match services.user_service.get_user(token).await {
                         Err(_) => {
                             Outcome::Failure((Status::InternalServerError, AuthError::Internal))
                         }
@@ -78,7 +81,8 @@ impl<'r> FromRequest<'r> for AuthUiUser {
                 if !Token::is_valid(&token) {
                     return Outcome::Forward(());
                 }
-                match SERVICES.get().await.user_service.get_user(token).await {
+                let services = req.guard::<&State<Services>>().await.unwrap();
+                match services.user_service.get_user(token).await {
                     Err(_) => Outcome::Forward(()),
                     Ok(user) => Outcome::Success(AuthUiUser { user: user }),
                 }

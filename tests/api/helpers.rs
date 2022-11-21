@@ -64,7 +64,18 @@ impl TestApp {
         let response = self
             .login(&self.test_user.email, &self.test_user.password)
             .await;
-        self.token = Some(response.text().await.unwrap());
+        assert_eq!(response.status().as_u16(), 200);
+        self.token = Some(
+            response
+                .text()
+                .await
+                .unwrap()
+                .split('\n')
+                .collect::<Vec<&str>>()[2]
+                .split('=')
+                .collect::<Vec<&str>>()[1]
+                .into(),
+        );
     }
 
     pub fn test_user_logout(&mut self) {
@@ -80,11 +91,8 @@ impl TestApp {
         self.api_client
             .post(format!("{}/api/addSubscription", self.address))
             .header(
-                AUTHORIZATION,
-                self.token
-                    .as_ref()
-                    .map(|t| format!("GoogleLogin auth={}", t))
-                    .unwrap_or("".into()),
+                "Authorization",
+                format!("GoogleLogin auth={}", self.token.as_deref().unwrap_or("")),
             )
             .json(&serde_json::json!({
                 "link": link,
@@ -112,7 +120,11 @@ pub async fn spawn_app() -> TestApp {
 pub async fn spawn_app_by_type(use_actix: bool) -> TestApp {
     let configuration = {
         let mut c = get_configuration().expect("Failed to get configuration.");
-        c.application.port = 0;
+        c.application.port = if use_actix {
+            0
+        } else {
+            portpicker::pick_unused_port().expect("Failed to get port.")
+        };
         c
     };
 
@@ -127,11 +139,12 @@ pub async fn spawn_app_by_type(use_actix: bool) -> TestApp {
     };
     let port = app.port;
 
-    configure_database(&app.pool).await;
-    let test_user = TestUser::generate();
-    test_user.store(&app.pool).await;
-
+    let pool = app.pool.clone();
     let _ = tokio::spawn(app.run_until_stopped());
+
+    configure_database(&pool).await;
+    let test_user = TestUser::generate();
+    test_user.store(&pool).await;
 
     let client = Client::builder()
         .redirect(Policy::none())

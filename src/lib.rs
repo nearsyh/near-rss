@@ -71,7 +71,7 @@ impl Application {
         let services = Services::new(sqlite_pool.clone()).await;
 
         let config = Config {
-            port: configuration.application.port + 1,
+            port: configuration.application.port,
             address: configuration
                 .application
                 .host
@@ -106,6 +106,7 @@ impl Application {
                     routes::api::add_subscription_options,
                 ],
             )
+            .mount("/accounts", routes![routes::accounts::old_client_login])
             .mount("/", routes![routes::refresh])
             .attach(CORS())
             .register("/", catchers![routes::unauthorized])
@@ -118,8 +119,8 @@ impl Application {
     }
 
     pub async fn create_actix_server(configuration: &Configuration) -> Result<Application> {
-        SERVICES.get().await;
-        THREAD.get().await;
+        // SERVICES.get().await;
+        // THREAD.get().await;
 
         let sqlite_pool =
             SqlitePoolOptions::new().connect_lazy_with(configuration.database.connect_options());
