@@ -102,7 +102,7 @@ impl Application {
                 routes![
                     routes::api::get_unread_items,
                     routes::api::get_unread_items_options,
-                    routes::api::mark_as_read,
+                    routes::api::old_mark_as_read,
                     routes::api::mark_as_read_options,
                     routes::api::old_add_subscription,
                     routes::api::add_subscription_options,

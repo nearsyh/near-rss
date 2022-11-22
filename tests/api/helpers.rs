@@ -1,3 +1,4 @@
+use crate::data::Contents;
 use near_rss::configuration::{get_configuration, Configuration};
 use near_rss::database::users::User;
 use near_rss::Application;
@@ -99,6 +100,42 @@ impl TestApp {
                 "title": title,
                 "folder": folder
             }))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn mark_as_read(&self, ids: &[&str]) -> reqwest::Response {
+        self.api_client
+            .post(format!("{}/api/markAsRead", self.address))
+            .header(
+                "Authorization",
+                format!("GoogleLogin auth={}", self.token.as_deref().unwrap_or("")),
+            )
+            .json(&serde_json::json!({ "ids": ids }))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn get_unread_items(
+        &self,
+        offset: Option<String>,
+        limit: Option<usize>,
+    ) -> reqwest::Response {
+        let mut builder = self.api_client.get(format!("{}/api/unread", self.address));
+        if let Some(offset) = offset.as_deref() {
+            builder = builder.query(&[("offset", offset)]);
+        }
+        if let Some(limit) = limit {
+            builder = builder.query(&[("limit", limit)]);
+        }
+
+        builder
+            .header(
+                "Authorization",
+                format!("GoogleLogin auth={}", self.token.as_deref().unwrap_or("")),
+            )
             .send()
             .await
             .expect("Failed to execute request.")

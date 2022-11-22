@@ -49,7 +49,7 @@ pub struct Ids {
 }
 
 #[post("/markAsRead", data = "<ids>")]
-pub async fn mark_as_read(
+pub async fn old_mark_as_read(
     auth_user: AuthUser,
     services: &Services,
     ids: Json<Ids>,
