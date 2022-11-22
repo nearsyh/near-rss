@@ -48,6 +48,16 @@ pub async fn list_subscriptions(
     HttpResponse::Ok().json(Subscriptions { subscriptions })
 }
 
+#[derive(FromForm)]
+pub struct OldAddRequest {
+    quickadd: String,
+}
+
+#[derive(serde::Deserialize)]
+pub struct AddRequest {
+    quickadd: String,
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AddSubscriptionResponse {
@@ -56,21 +66,40 @@ pub struct AddSubscriptionResponse {
     stream_id: String,
 }
 
-#[post("/api/0/subscription/quickadd?<quickadd>")]
-pub async fn add_subscription(
+#[post("/api/0/subscription/quickadd", data = "<request>")]
+pub async fn old_add_subscription(
     auth_user: AuthUser,
     services: &Services,
-    quickadd: &'_ str,
+    request: Form<OldAddRequest>,
 ) -> Json<AddSubscriptionResponse> {
     let user = auth_user.user;
     // TODO: handle error properly
     let subscription = services
         .subscription_service
-        .add_subscription_from_url(&user.id, quickadd)
+        .add_subscription_from_url(&user.id, &request.quickadd)
         .await
         .unwrap();
     Json(AddSubscriptionResponse {
-        query: quickadd.to_string(),
+        query: request.quickadd.clone(),
+        num_results: 1,
+        stream_id: subscription.id,
+    })
+}
+
+pub async fn add_subscription(
+    auth_user: web::ReqData<AuthUser>,
+    services: web::Data<Services>,
+    request: web::Form<AddRequest>,
+) -> HttpResponse {
+    let user = &auth_user.user;
+    // TODO: handle error properly
+    let subscription = services
+        .subscription_service
+        .add_subscription_from_url(&user.id, &request.quickadd)
+        .await
+        .unwrap();
+    HttpResponse::Ok().json(AddSubscriptionResponse {
+        query: request.quickadd.clone(),
         num_results: 1,
         stream_id: subscription.id,
     })

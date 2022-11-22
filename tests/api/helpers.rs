@@ -105,6 +105,22 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
+    pub async fn quick_add_subscription(&self, link: &str) -> reqwest::Response {
+        self.api_client
+            .post(format!(
+                "{}/reader/api/0/subscription/quickadd",
+                self.address
+            ))
+            .header(
+                "Authorization",
+                format!("GoogleLogin auth={}", self.token.as_deref().unwrap_or("")),
+            )
+            .form(&serde_json::json!({ "quickadd": link }))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
     pub async fn list_subscriptions(&self) -> reqwest::Response {
         self.api_client
             .get(format!("{}/reader/api/0/subscription/list", self.address))
