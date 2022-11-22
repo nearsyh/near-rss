@@ -1,7 +1,7 @@
 use crate::common::{PageOption, Services};
 use crate::middlewares::auth::AuthUser;
 use crate::services::stream::ItemContent;
-use actix_web::web;
+use actix_web::{web, HttpResponse};
 use rocket::serde::{json::Json, Deserialize, Serialize};
 
 #[derive(Serialize, Debug)]
@@ -12,7 +12,7 @@ pub struct Contents {
 }
 
 #[get("/unread?<offset>&<limit>")]
-pub async fn get_unread_items(
+pub async fn old_get_unread_items(
     auth_user: AuthUser,
     services: &Services,
     offset: Option<String>,
@@ -32,6 +32,36 @@ pub async fn get_unread_items(
         .await
         .unwrap();
     Json(Contents {
+        items: contents.items,
+        next_page_offset: contents.next_page_offset,
+    })
+}
+
+#[derive(Deserialize)]
+pub struct Page {
+    offset: Option<String>,
+    limit: Option<usize>,
+}
+
+pub async fn get_unread_items(
+    auth_user: web::ReqData<AuthUser>,
+    services: web::Data<Services>,
+    page: web::Query<Page>,
+) -> HttpResponse {
+    let user_id = &auth_user.user.id;
+    let contents = services
+        .stream_service
+        .get_unread_item_contents(
+            user_id,
+            PageOption {
+                offset: page.offset.clone(),
+                limit: page.limit.unwrap_or(100),
+                desc: true,
+            },
+        )
+        .await
+        .unwrap();
+    HttpResponse::Ok().json(Contents {
         items: contents.items,
         next_page_offset: contents.next_page_offset,
     })
@@ -61,6 +91,20 @@ pub async fn old_mark_as_read(
         .await
         .unwrap();
     "OK"
+}
+
+pub async fn mark_as_read(
+    auth_user: web::ReqData<AuthUser>,
+    services: web::Data<Services>,
+    ids: web::Json<Ids>,
+) -> HttpResponse {
+    let str_ids = ids.ids.iter().map(|s| &**s).collect();
+    services
+        .stream_service
+        .mark_as_read(&auth_user.user.id, &str_ids)
+        .await
+        .unwrap();
+    HttpResponse::Ok().body("OK")
 }
 
 #[options("/markAsRead")]

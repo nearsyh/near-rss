@@ -100,7 +100,7 @@ impl Application {
             .mount(
                 "/api",
                 routes![
-                    routes::api::get_unread_items,
+                    routes::api::old_get_unread_items,
                     routes::api::get_unread_items_options,
                     routes::api::old_mark_as_read,
                     routes::api::mark_as_read_options,
@@ -146,7 +146,9 @@ impl Application {
                         .route(
                             "/addSubscription",
                             web::post().to(routes::api::add_subscription),
-                        ),
+                        )
+                        .route("/markAsRead", web::post().to(routes::api::mark_as_read))
+                        .route("/unread", web::get().to(routes::api::get_unread_items)),
                 )
                 .service(actix_files::Files::new("/", "./public"))
         })

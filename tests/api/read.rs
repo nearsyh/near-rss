@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 #[tokio::test]
 async fn anonymous_mark_as_read_should_fail() {
-    let app = spawn_app_by_type(false).await;
+    let app = spawn_app().await;
 
     let response = app.mark_as_read(&vec![]).await;
 
@@ -14,7 +14,7 @@ async fn anonymous_mark_as_read_should_fail() {
 
 #[tokio::test]
 async fn mark_empty_items_as_read_should_return_200() {
-    let mut app = spawn_app_by_type(false).await;
+    let mut app = spawn_app().await;
     app.test_user_login().await;
 
     let response = app.mark_as_read(&vec![]).await;
@@ -24,9 +24,9 @@ async fn mark_empty_items_as_read_should_return_200() {
 
 #[tokio::test]
 async fn items_marked_as_read_should_not_return_in_unread_list() {
-    let mut app = spawn_app_by_type(false).await;
+    let mut app = spawn_app().await;
     app.test_user_login().await;
-    app.add_subscription("https://hnrss.org/newest", None, None)
+    app.add_subscription("https://rsshub.app/36kr/information/web_news", None, None)
         .await;
 
     let unread_ids = app

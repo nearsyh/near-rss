@@ -3,7 +3,7 @@ use crate::helpers::{spawn_app, spawn_app_by_type};
 
 #[tokio::test]
 async fn anonymous_list_unread_should_fail() {
-    let app = spawn_app_by_type(false).await;
+    let app = spawn_app().await;
 
     let response = app.get_unread_items(None, None).await;
 
@@ -13,9 +13,9 @@ async fn anonymous_list_unread_should_fail() {
 
 #[tokio::test]
 async fn list_unread_items_should_return_200() {
-    let mut app = spawn_app_by_type(false).await;
+    let mut app = spawn_app().await;
     app.test_user_login().await;
-    app.add_subscription("https://hnrss.org/newest", None, None)
+    app.add_subscription("https://rsshub.app/36kr/information/web_news", None, None)
         .await;
 
     let response = app.get_unread_items(None, None).await;
@@ -30,9 +30,9 @@ async fn list_unread_items_should_return_200() {
 
 #[tokio::test]
 async fn list_unread_items_with_limit_should_return_200() {
-    let mut app = spawn_app_by_type(false).await;
+    let mut app = spawn_app().await;
     app.test_user_login().await;
-    app.add_subscription("https://hnrss.org/newest", None, None)
+    app.add_subscription("https://rsshub.app/36kr/information/web_news", None, None)
         .await;
 
     let response = app.get_unread_items(None, Some(10)).await;
@@ -47,9 +47,9 @@ async fn list_unread_items_with_limit_should_return_200() {
 
 #[tokio::test]
 async fn list_unread_items_with_offset_should_return_200() {
-    let mut app = spawn_app_by_type(false).await;
+    let mut app = spawn_app().await;
     app.test_user_login().await;
-    app.add_subscription("https://hnrss.org/newest", None, None)
+    app.add_subscription("https://rsshub.app/36kr/information/web_news", None, None)
         .await;
 
     let first_page = app
