@@ -7,3 +7,4 @@ mod ping;
 mod read;
 mod subscriptions;
 mod unread;
+mod user;

@@ -90,8 +90,8 @@ impl Application {
                     routes::reader::subscriptions::list_subscriptions,
                     routes::reader::subscriptions::add_subscription,
                     routes::reader::subscriptions::edit_subscription,
-                    routes::reader::users::get_user_info,
-                    routes::reader::users::token,
+                    routes::reader::users::old_get_user_info,
+                    routes::reader::users::old_token,
                     routes::reader::stream::get_item_ids,
                     routes::reader::stream::get_contents,
                     routes::reader::edit::edit_tag,
@@ -154,7 +154,15 @@ impl Application {
                     web::scope("/reader")
                         .wrap(from_fn(reject_anonymous_user))
                         .app_data(services.clone())
-                        .route("/ping", web::get().to(routes::reader::ping)),
+                        .route("/ping", web::get().to(routes::reader::ping))
+                        .service(
+                            web::scope("/api/0")
+                                .route(
+                                    "/user-info",
+                                    web::get().to(routes::reader::users::get_user_info),
+                                )
+                                .route("/token", web::get().to(routes::reader::users::token)),
+                        ),
                 )
                 .service(actix_files::Files::new("/", "./public"))
         })

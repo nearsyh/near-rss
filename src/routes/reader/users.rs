@@ -1,4 +1,5 @@
 use crate::middlewares::auth::AuthUser;
+use actix_web::{web, HttpResponse};
 use rocket::serde::{json::Json, Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -14,7 +15,7 @@ pub struct UserInfo {
 }
 
 #[get("/api/0/user-info")]
-pub async fn get_user_info(auth_user: AuthUser) -> Json<UserInfo> {
+pub async fn old_get_user_info(auth_user: AuthUser) -> Json<UserInfo> {
     let user = auth_user.user;
     Json(UserInfo {
         user_id: user.id.clone(),
@@ -28,6 +29,23 @@ pub async fn get_user_info(auth_user: AuthUser) -> Json<UserInfo> {
 }
 
 #[get("/api/0/token")]
-pub async fn token(auth_user: AuthUser) -> String {
+pub async fn old_token(auth_user: AuthUser) -> String {
     auth_user.user.token
+}
+
+pub async fn get_user_info(auth_user: web::ReqData<AuthUser>) -> HttpResponse {
+    let user = &auth_user.user;
+    HttpResponse::Ok().json(UserInfo {
+        user_id: user.id.clone(),
+        user_name: user.email.clone(),
+        user_profile_id: user.id.clone(),
+        user_email: user.email.clone(),
+        is_blogged_user: true,
+        signup_time_sec: 12345678,
+        is_multi_login_enabled: true,
+    })
+}
+
+pub async fn token(auth_user: web::ReqData<AuthUser>) -> HttpResponse {
+    HttpResponse::Ok().body(auth_user.user.token.clone())
 }

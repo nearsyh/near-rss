@@ -148,6 +148,30 @@ impl TestApp {
             .await
             .expect("Failed to execute request.")
     }
+
+    pub async fn get_user_info(&self) -> reqwest::Response {
+        self.api_client
+            .get(format!("{}/reader/api/0/user-info", self.address))
+            .header(
+                "Authorization",
+                format!("GoogleLogin auth={}", self.token.as_deref().unwrap_or("")),
+            )
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn get_user_token(&self) -> reqwest::Response {
+        self.api_client
+            .get(format!("{}/reader/api/0/token", self.address))
+            .header(
+                "Authorization",
+                format!("GoogleLogin auth={}", self.token.as_deref().unwrap_or("")),
+            )
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
 }
 
 pub async fn spawn_app() -> TestApp {
