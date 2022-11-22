@@ -4,6 +4,7 @@ pub mod subscriptions;
 pub mod users;
 
 use crate::middlewares::auth::AuthUser;
+use actix_web::{web, HttpResponse};
 
 fn convert_to_long_form_ids(ids: &Vec<&str>) -> Vec<String> {
     ids.iter()
@@ -12,6 +13,10 @@ fn convert_to_long_form_ids(ids: &Vec<&str>) -> Vec<String> {
 }
 
 #[get("/ping")]
-pub fn ping(_token: AuthUser) -> &'static str {
+pub fn old_ping(_token: AuthUser) -> &'static str {
     "OK"
+}
+
+pub async fn ping(_token: web::ReqData<AuthUser>) -> HttpResponse {
+    HttpResponse::Ok().body("OK")
 }

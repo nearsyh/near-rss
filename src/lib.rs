@@ -86,7 +86,7 @@ impl Application {
             .mount(
                 "/reader",
                 routes![
-                    routes::reader::ping,
+                    routes::reader::old_ping,
                     routes::reader::subscriptions::list_subscriptions,
                     routes::reader::subscriptions::add_subscription,
                     routes::reader::subscriptions::edit_subscription,
@@ -149,6 +149,12 @@ impl Application {
                         )
                         .route("/markAsRead", web::post().to(routes::api::mark_as_read))
                         .route("/unread", web::get().to(routes::api::get_unread_items)),
+                )
+                .service(
+                    web::scope("/reader")
+                        .wrap(from_fn(reject_anonymous_user))
+                        .app_data(services.clone())
+                        .route("/ping", web::get().to(routes::reader::ping)),
                 )
                 .service(actix_files::Files::new("/", "./public"))
         })
