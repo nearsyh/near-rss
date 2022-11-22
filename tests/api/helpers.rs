@@ -105,6 +105,18 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
+    pub async fn list_subscriptions(&self) -> reqwest::Response {
+        self.api_client
+            .get(format!("{}/reader/api/0/subscription/list", self.address))
+            .header(
+                "Authorization",
+                format!("GoogleLogin auth={}", self.token.as_deref().unwrap_or("")),
+            )
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
     pub async fn mark_as_read(&self, ids: &[&str]) -> reqwest::Response {
         self.api_client
             .post(format!("{}/api/markAsRead", self.address))

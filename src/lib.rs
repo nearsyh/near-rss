@@ -87,7 +87,7 @@ impl Application {
                 "/reader",
                 routes![
                     routes::reader::old_ping,
-                    routes::reader::subscriptions::list_subscriptions,
+                    routes::reader::subscriptions::old_list_subscriptions,
                     routes::reader::subscriptions::add_subscription,
                     routes::reader::subscriptions::edit_subscription,
                     routes::reader::users::old_get_user_info,
@@ -161,7 +161,12 @@ impl Application {
                                     "/user-info",
                                     web::get().to(routes::reader::users::get_user_info),
                                 )
-                                .route("/token", web::get().to(routes::reader::users::token)),
+                                .route("/token", web::get().to(routes::reader::users::token))
+                                .route(
+                                    "/subscription/list",
+                                    web::get()
+                                        .to(routes::reader::subscriptions::list_subscriptions),
+                                ),
                         ),
                 )
                 .service(actix_files::Files::new("/", "./public"))

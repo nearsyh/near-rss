@@ -60,3 +60,24 @@ pub struct UserInfo {
     pub signup_time_sec: u64,
     pub is_multi_login_enabled: bool,
 }
+
+#[derive(Deserialize, Clone)]
+pub struct Category {
+    pub id: String,
+    pub label: String,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct Subscription {
+    pub id: String,
+    pub title: String,
+    pub description: String,
+    pub categories: Vec<Category>,
+    pub url: String,
+    pub feed_url: String,
+}
+
+#[derive(Deserialize)]
+pub struct Subscriptions {
+    pub subscriptions: Vec<Subscription>,
+}

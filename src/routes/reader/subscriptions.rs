@@ -1,6 +1,7 @@
 use crate::common::Services;
 use crate::middlewares::auth::AuthUser;
 use crate::services::subscriptions::Subscription;
+use actix_web::{web, HttpResponse};
 use rocket::form::Form;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 
@@ -17,7 +18,10 @@ pub struct Subscriptions {
 }
 
 #[get("/api/0/subscription/list")]
-pub async fn list_subscriptions(auth_user: AuthUser, services: &Services) -> Json<Subscriptions> {
+pub async fn old_list_subscriptions(
+    auth_user: AuthUser,
+    services: &Services,
+) -> Json<Subscriptions> {
     let user = auth_user.user;
     // TODO: handle error properly
     let subscriptions = services
@@ -28,6 +32,20 @@ pub async fn list_subscriptions(auth_user: AuthUser, services: &Services) -> Jso
     Json(Subscriptions {
         subscriptions: subscriptions,
     })
+}
+
+pub async fn list_subscriptions(
+    auth_user: web::ReqData<AuthUser>,
+    services: web::Data<Services>,
+) -> HttpResponse {
+    let user = &auth_user.user;
+    // TODO: handle error properly
+    let subscriptions = services
+        .subscription_service
+        .list_subscriptions(&user.id)
+        .await
+        .unwrap();
+    HttpResponse::Ok().json(Subscriptions { subscriptions })
 }
 
 #[derive(Serialize)]
