@@ -9,6 +9,7 @@ mod common;
 pub mod configuration;
 pub mod database;
 mod middlewares;
+pub mod refresh;
 mod routes;
 mod services;
 
@@ -92,9 +93,9 @@ impl Application {
                     routes::reader::subscriptions::old_edit_subscription,
                     routes::reader::users::old_get_user_info,
                     routes::reader::users::old_token,
-                    routes::reader::stream::get_item_ids,
-                    routes::reader::stream::get_contents,
-                    routes::reader::edit::edit_tag,
+                    routes::reader::stream::old_get_item_ids,
+                    routes::reader::stream::old_get_contents,
+                    routes::reader::edit::old_edit_tag,
                 ],
             )
             .mount(
@@ -124,6 +125,16 @@ impl Application {
         let sqlite_pool =
             SqlitePoolOptions::new().connect_lazy_with(configuration.database.connect_options());
         let services = web::Data::new(Services::new(sqlite_pool.clone()).await);
+
+        println!("{:?}", configuration);
+        services
+            .user_service
+            .register(
+                &configuration.application.email,
+                &configuration.application.password,
+            )
+            .await
+            .expect("Failed to register the user.");
 
         let address = format!(
             "{}:{}",
@@ -176,7 +187,15 @@ impl Application {
                                     web::post()
                                         .to(routes::reader::subscriptions::edit_subscription),
                                 )
-                                .route("/edit-tag", web::post().to(routes::reader::edit::edit_tag)),
+                                .route("/edit-tag", web::post().to(routes::reader::edit::edit_tag))
+                                .route(
+                                    "/stream/items/ids",
+                                    web::get().to(routes::reader::stream::get_item_ids),
+                                )
+                                .route(
+                                    "/stream/items/contents",
+                                    web::post().to(routes::reader::stream::get_contents),
+                                ),
                         ),
                 )
                 .service(actix_files::Files::new("/", "./public"))

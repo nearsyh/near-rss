@@ -2,6 +2,7 @@ use crate::common::Services;
 use crate::middlewares::auth::AuthUser;
 use actix_web::{web, HttpResponse};
 use rocket::form::Form;
+use serde::Deserialize;
 
 #[derive(FromForm)]
 pub struct OldEditTagRequest<'r> {
@@ -53,7 +54,7 @@ pub async fn old_edit_tag(
     "OK"
 }
 
-#[derive(FromForm)]
+#[derive(Deserialize)]
 pub struct EditTagRequest {
     pub i: Option<Vec<String>>,
     pub a: Option<String>,
@@ -67,7 +68,7 @@ pub async fn edit_tag(
 ) -> HttpResponse {
     let user_id = &auth_user.user.id;
     if let Some(ref ids) = request.i {
-        let ids_in_hex = super::convert_to_long_form_ids(ids);
+        let ids_in_hex = super::convert_to_long_form_ids(&ids.iter().map(|s| s.as_str()).collect());
         let ids_ref = &ids_in_hex.iter().map(|s| &**s).collect::<Vec<&str>>();
         if let Some(to_add) = &request.a {
             if to_add == "user/-/state/com.google/read" {

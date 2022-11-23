@@ -113,7 +113,6 @@ pub async fn mark_as_read_options() -> &'static str {
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct SubscriptionData {
     link: String,
     title: Option<String>,
@@ -156,7 +155,7 @@ pub async fn add_subscription(
     auth_user: web::ReqData<AuthUser>,
     services: web::Data<Services>,
     subscription: web::Json<SubscriptionData>,
-) -> &'static str {
+) -> HttpResponse {
     let added = services
         .subscription_service
         .add_subscription_from_url(&auth_user.user.id, &subscription.link)
@@ -180,7 +179,7 @@ pub async fn add_subscription(
         .load_all_subscription_items()
         .await
         .unwrap();
-    "OK"
+    HttpResponse::Ok().body("OK")
 }
 
 #[options("/addSubscription")]

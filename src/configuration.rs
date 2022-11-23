@@ -2,20 +2,22 @@ use serde_aux::field_attributes::deserialize_number_from_string;
 use sqlx::sqlite::SqliteConnectOptions;
 use std::str::FromStr;
 
-#[derive(serde::Deserialize, Clone)]
+#[derive(serde::Deserialize, Clone, Debug)]
 pub struct Configuration {
     pub application: ApplicationConfiguration,
     pub database: DatabaseConfiguration,
 }
 
-#[derive(serde::Deserialize, Clone)]
+#[derive(serde::Deserialize, Clone, Debug)]
 pub struct ApplicationConfiguration {
     pub host: String,
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
+    pub email: String,
+    pub password: String,
 }
 
-#[derive(serde::Deserialize, Clone)]
+#[derive(serde::Deserialize, Clone, Debug)]
 pub struct DatabaseConfiguration {
     path: String,
 }

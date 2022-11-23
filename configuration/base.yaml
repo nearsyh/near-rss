@@ -1,5 +1,7 @@
 application:
   host: "127.0.0.1"
   port: 8000
+  email: abcd@abcd.com
+  password: password
 database:
   path: ":memory:"

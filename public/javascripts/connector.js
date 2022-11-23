@@ -1,4 +1,4 @@
-let endpoint = "http://localhost:8000"
+let endpoint = window.location.origin
 let unreadLimit = 50;
 
 function setTokenInCookie(token) {
@@ -70,7 +70,10 @@ function loadUnreadItems(offset) {
 
 function markItemsAsRead(ids) {
     return fetch(`${endpoint}/api/markAsRead`, {
-            headers: constructHeader() || { 'content-type': 'application/json' },
+            headers: {
+                ...constructHeader(),
+                'content-type': 'application/json'
+            },
             method: 'POST',
             mode: 'cors',
             redirect: 'follow',
@@ -89,7 +92,10 @@ function markItemsAsRead(ids) {
 
 function addSubscription(link, title, folder) {
     return fetch(`${endpoint}/api/addSubscription`, {
-            headers: constructHeader() || { 'content-type': 'application/json' },
+            headers: {
+                ...constructHeader(),
+                'content-type': 'application/json'
+            },
             method: 'POST',
             mode: 'cors',
             redirect: 'follow',
