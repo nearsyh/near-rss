@@ -175,7 +175,8 @@ impl Application {
                                     "/subscription/edit",
                                     web::post()
                                         .to(routes::reader::subscriptions::edit_subscription),
-                                ),
+                                )
+                                .route("/edit-tag", web::post().to(routes::reader::edit::edit_tag)),
                         ),
                 )
                 .service(actix_files::Files::new("/", "./public"))
