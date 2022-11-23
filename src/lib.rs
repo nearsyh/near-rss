@@ -89,7 +89,7 @@ impl Application {
                     routes::reader::old_ping,
                     routes::reader::subscriptions::old_list_subscriptions,
                     routes::reader::subscriptions::old_add_subscription,
-                    routes::reader::subscriptions::edit_subscription,
+                    routes::reader::subscriptions::old_edit_subscription,
                     routes::reader::users::old_get_user_info,
                     routes::reader::users::old_token,
                     routes::reader::stream::get_item_ids,
@@ -170,6 +170,11 @@ impl Application {
                                 .route(
                                     "/subscription/quickadd",
                                     web::post().to(routes::reader::subscriptions::add_subscription),
+                                )
+                                .route(
+                                    "/subscription/edit",
+                                    web::post()
+                                        .to(routes::reader::subscriptions::edit_subscription),
                                 ),
                         ),
                 )

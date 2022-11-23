@@ -4,6 +4,7 @@ use crate::services::subscriptions::Subscription;
 use actix_web::{web, HttpResponse};
 use rocket::form::Form;
 use rocket::serde::{json::Json, Deserialize, Serialize};
+use std::ops::Deref;
 
 #[derive(FromForm)]
 pub struct EditTagRequest<'r> {
@@ -106,7 +107,7 @@ pub async fn add_subscription(
 }
 
 #[derive(FromForm)]
-pub struct SubscriptionEditRequest<'r> {
+pub struct OldSubscriptionEditRequest<'r> {
     // Action
     ac: &'r str,
     // Subscription id
@@ -120,10 +121,10 @@ pub struct SubscriptionEditRequest<'r> {
 }
 
 #[post("/api/0/subscription/edit", data = "<request>")]
-pub async fn edit_subscription(
+pub async fn old_edit_subscription(
     auth_user: AuthUser,
     services: &Services,
-    request: Form<SubscriptionEditRequest<'_>>,
+    request: Form<OldSubscriptionEditRequest<'_>>,
 ) -> &'static str {
     let user = auth_user.user;
     if let Some(feed_url) = request.s.strip_prefix("feed/") {
@@ -153,4 +154,59 @@ pub async fn edit_subscription(
             .unwrap();
     }
     "OK"
+}
+
+#[derive(Deserialize)]
+pub struct SubscriptionEditRequest {
+    // Action
+    ac: String,
+    // Subscription id
+    s: String,
+    // Title
+    t: Option<String>,
+    // Tag to add
+    a: Vec<String>,
+    // Tag to remove
+    r: Vec<String>,
+}
+
+pub async fn edit_subscription(
+    auth_user: web::ReqData<AuthUser>,
+    services: web::Data<Services>,
+    request: web::Form<SubscriptionEditRequest>,
+) -> HttpResponse {
+    let user = &auth_user.user;
+    if let Some(feed_url) = request.s.strip_prefix("feed/") {
+        match request.ac.deref() {
+            "subscribe" => {
+                services
+                    .subscription_service
+                    .add_subscription_from_url(&user.id, feed_url)
+                    .await
+                    .unwrap();
+            }
+            "unsubscribe" => {
+                services
+                    .subscription_service
+                    .remove_subscription(&user.id, &request.s)
+                    .await
+                    .unwrap();
+            }
+            _ => {}
+        };
+    }
+    if request.ac == "edit" {
+        services
+            .subscription_service
+            .edit_subscription(
+                &user.id,
+                &request.s,
+                &request.t.as_deref(),
+                &request.a.iter().map(|s| s.as_str()).collect(),
+                &request.r.iter().map(|s| s.as_str()).collect(),
+            )
+            .await
+            .unwrap();
+    }
+    HttpResponse::Ok().body("OK")
 }
