@@ -1,23 +1,8 @@
-#[macro_use]
-extern crate rocket;
-
 use near_rss::configuration::get_configuration;
 use near_rss::refresh::refresh_until_stopped;
-use near_rss::{Application, ServerWrapper};
+use near_rss::Application;
 use std::fmt::{Debug, Display};
 use tokio::task::JoinError;
-
-// #[launch]
-// async fn rocket() -> _ {
-//     let configuration = get_configuration().expect("Failed to get configuration.");
-//     let app = Application::create_rocket_server(&configuration)
-//         .await
-//         .expect("Failed to create application");
-//     match app.server {
-//         ServerWrapper::RocketServer(rocket) => rocket,
-//         _ => panic!("Not supported type"),
-//     }
-// }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -25,7 +10,7 @@ async fn main() -> anyhow::Result<()> {
     // init_subscriber(subscriber);
 
     let configuration = get_configuration().expect("Failed to read configuration.");
-    let application = Application::create_actix_server(&configuration).await?;
+    let application = Application::create(&configuration).await?;
 
     let application_task = tokio::spawn(application.run_until_stopped());
     let worker_task = tokio::spawn(refresh_until_stopped(configuration));

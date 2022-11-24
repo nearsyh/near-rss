@@ -1,5 +1,6 @@
 use crate::common::error::Errors;
 use anyhow::{Error, Result};
+use async_trait::async_trait;
 use sqlx::SqlitePool;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -48,7 +49,7 @@ impl Subscription {
     }
 }
 
-#[rocket::async_trait]
+#[async_trait]
 pub trait SubscriptionRepository {
     async fn insert_subscription(&self, subscription: Subscription) -> Result<()>;
     async fn update_subscription(&self, subscription: Subscription) -> Result<Subscription>;
@@ -76,7 +77,7 @@ impl SubscriptionRepositorySqlite {
     }
 }
 
-#[rocket::async_trait]
+#[async_trait]
 impl SubscriptionRepository for SubscriptionRepositorySqlite {
     async fn insert_subscription(&self, subscription: Subscription) -> Result<()> {
         sqlx::query(

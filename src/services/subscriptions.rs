@@ -3,8 +3,9 @@ use crate::database::items::{Item, ItemRepository};
 use crate::database::subscriptions::SubscriptionRepository;
 use crate::services::feeds::{new_feed_service, FeedService};
 use anyhow::Result;
+use async_trait::async_trait;
 use feed_rs::model::Feed;
-use rocket::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Category {
@@ -84,7 +85,7 @@ impl Subscription {
     }
 }
 
-#[rocket::async_trait]
+#[async_trait]
 pub trait SubscriptionService {
     async fn get_subscription_from_url(&self, url: &str) -> Result<Subscription>;
 
@@ -144,7 +145,7 @@ fn extract_items_from_feed(user_id: &str, subscription_id: &str, feed: &Feed) ->
         .collect()
 }
 
-#[rocket::async_trait]
+#[async_trait]
 impl SubscriptionService for SubscriptionServiceImpl {
     async fn get_subscription_from_url(&self, url: &str) -> Result<Subscription> {
         let feed = self.feed_service.get_feed(url).await?;

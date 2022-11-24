@@ -23,7 +23,3 @@ where
 {
     actix_web::error::ErrorInternalServerError(e)
 }
-
-pub fn to_forbidden_error(msg: String) -> impl FnOnce() -> actix_web::Error {
-    || actix_web::error::ErrorForbidden(msg)
-}

@@ -12,11 +12,6 @@ fn convert_to_long_form_ids(ids: &Vec<&str>) -> Vec<String> {
         .collect::<Vec<String>>()
 }
 
-#[get("/ping")]
-pub fn old_ping(_token: AuthUser) -> &'static str {
-    "OK"
-}
-
 pub async fn ping(_token: web::ReqData<AuthUser>) -> HttpResponse {
     HttpResponse::Ok().body("OK")
 }

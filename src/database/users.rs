@@ -1,6 +1,7 @@
 use crate::common::new_id;
 use crate::common::token::Token;
 use anyhow::Result;
+use async_trait::async_trait;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
 
@@ -37,7 +38,7 @@ impl User {
     }
 }
 
-#[rocket::async_trait]
+#[async_trait]
 pub trait UserRepository {
     async fn create_user(&self, email: &str, password: &str) -> Result<Option<User>>;
     async fn update_user(&self, user: User) -> Result<Option<User>>;
@@ -61,7 +62,7 @@ impl UserRepositorySqlite {
     }
 }
 
-#[rocket::async_trait]
+#[async_trait]
 impl UserRepository for UserRepositorySqlite {
     async fn create_user(&self, email: &str, password: &str) -> Result<Option<User>> {
         if let Some(user) = self.get_user_by_email(email).await? {

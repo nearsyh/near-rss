@@ -98,8 +98,3 @@ pub async fn add_subscription(
         .unwrap();
     HttpResponse::Ok().body("OK")
 }
-
-#[options("/addSubscription")]
-pub async fn add_subscription_options() -> &'static str {
-    ""
-}

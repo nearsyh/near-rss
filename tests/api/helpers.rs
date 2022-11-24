@@ -1,8 +1,6 @@
-use crate::data::Contents;
 use near_rss::configuration::{get_configuration, Configuration};
 use near_rss::database::users::User;
 use near_rss::Application;
-use reqwest::header::AUTHORIZATION;
 use reqwest::redirect::Policy;
 use reqwest::Client;
 use sqlx::SqlitePool;
@@ -203,29 +201,15 @@ impl TestApp {
 }
 
 pub async fn spawn_app() -> TestApp {
-    spawn_app_by_type(true).await
-}
-
-pub async fn spawn_app_by_type(use_actix: bool) -> TestApp {
     let configuration = {
         let mut c = get_configuration().expect("Failed to get configuration.");
-        c.application.port = if use_actix {
-            0
-        } else {
-            portpicker::pick_unused_port().expect("Failed to get port.")
-        };
+        c.application.port = 0;
         c
     };
 
-    let app = if use_actix {
-        Application::create_actix_server(&configuration)
-            .await
-            .expect("Failed to create actix server")
-    } else {
-        Application::create_rocket_server(&configuration)
-            .await
-            .expect("Failed to create rocket server")
-    };
+    let app = Application::create(&configuration)
+        .await
+        .expect("Failed to create actix server");
     let port = app.port;
 
     let pool = app.pool.clone();

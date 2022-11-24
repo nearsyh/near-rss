@@ -1,6 +1,7 @@
 use crate::common::error::Errors;
 use crate::database::users::{User, UserRepository};
 use anyhow::{Error, Result};
+use async_trait::async_trait;
 
 pub struct UserCreds {
     pub sid: String,
@@ -8,7 +9,7 @@ pub struct UserCreds {
     pub cltoken: String,
 }
 
-#[rocket::async_trait]
+#[async_trait]
 pub trait UserService {
     async fn login(&self, email: &str, password: &str) -> Result<UserCreds>;
 
@@ -21,7 +22,7 @@ struct UserServiceImpl {
     user_repository: Box<dyn UserRepository + Send + Sync>,
 }
 
-#[rocket::async_trait]
+#[async_trait]
 impl UserService for UserServiceImpl {
     async fn login(&self, email: &str, password: &str) -> Result<UserCreds> {
         match self.user_repository.get_user_by_email(email).await? {
@@ -43,15 +44,6 @@ impl UserService for UserServiceImpl {
         }
     }
 
-    async fn get_user(&self, token: &str) -> Result<User> {
-        match self.user_repository.get_user_by_token(token).await? {
-            None => Err(Error::new(Errors::InvalidToken {
-                token: token.to_string(),
-            })),
-            Some(user) => Ok(user),
-        }
-    }
-
     async fn register(&self, email: &str, password: &str) -> Result<User> {
         let user = self
             .user_repository
@@ -59,6 +51,15 @@ impl UserService for UserServiceImpl {
             .await?
             .unwrap();
         Ok(user)
+    }
+
+    async fn get_user(&self, token: &str) -> Result<User> {
+        match self.user_repository.get_user_by_token(token).await? {
+            None => Err(Error::new(Errors::InvalidToken {
+                token: token.to_string(),
+            })),
+            Some(user) => Ok(user),
+        }
     }
 }
 

@@ -1,12 +1,9 @@
-pub mod debug;
 pub mod error;
 pub mod token;
 
 use crate::services::stream::StreamService;
 use crate::services::subscriptions::SubscriptionService;
 use crate::services::users::UserService;
-use log::{error, info};
-use reqwest;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct PageOption<T> {
@@ -77,14 +74,6 @@ pub fn current_time_s() -> i64 {
 
 pub fn oldest_allowed_time_ms() -> i64 {
     current_time_ms() - 14 * 24 * 60 * 60 * 1000
-}
-
-pub fn refresh() {
-    let endpoint = format!("{}/refresh", std::env::var("ENDPOINT").unwrap());
-    info!("Refreshing {}", endpoint);
-    if let Err(err) = reqwest::blocking::get(&endpoint) {
-        error!("Refreshing fails {:?}", err);
-    }
 }
 
 pub struct Services {

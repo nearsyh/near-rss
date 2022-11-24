@@ -1,5 +1,6 @@
 use again::RetryPolicy;
 use anyhow::Result;
+use async_trait::async_trait;
 use feed_rs::model::Feed;
 use feed_rs::parser;
 use futures::future::FutureExt;
@@ -10,7 +11,7 @@ use reqwest;
 use std::collections::HashMap;
 use std::time::Duration;
 
-#[rocket::async_trait]
+#[async_trait]
 pub trait FeedService {
     async fn get_feed(&self, url: &str) -> Result<Feed>;
 
@@ -19,7 +20,7 @@ pub trait FeedService {
 
 struct FeedServiceImpl {}
 
-#[rocket::async_trait]
+#[async_trait]
 impl FeedService for FeedServiceImpl {
     async fn get_feed(&self, url: &str) -> Result<Feed> {
         let policy = RetryPolicy::fixed(Duration::from_millis(100))

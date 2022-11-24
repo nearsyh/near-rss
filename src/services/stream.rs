@@ -2,7 +2,8 @@ use crate::common::{oldest_allowed_time_ms, Page, PageOption};
 use crate::database::items::{Item, ItemRepository, State};
 use crate::database::subscriptions::{Subscription, SubscriptionRepository};
 use anyhow::Result;
-use rocket::serde::{Deserialize, Serialize};
+use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -97,7 +98,7 @@ impl ItemContent {
     }
 }
 
-#[rocket::async_trait]
+#[async_trait]
 pub trait StreamService {
     async fn get_unread_item_ids(
         &self,
@@ -147,7 +148,7 @@ struct StreamServiceImpl {
     subscription_repository: Box<dyn SubscriptionRepository + Send + Sync>,
 }
 
-#[rocket::async_trait]
+#[async_trait]
 impl StreamService for StreamServiceImpl {
     async fn get_unread_item_ids(
         &self,

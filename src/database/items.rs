@@ -1,5 +1,6 @@
 use crate::common::{current_time_ms, Page, PageOption};
 use anyhow::Result;
+use async_trait::async_trait;
 use sqlx::SqlitePool;
 
 #[derive(sqlx::FromRow, PartialEq, Eq, Debug)]
@@ -120,7 +121,7 @@ impl State {
     }
 }
 
-#[rocket::async_trait]
+#[async_trait]
 pub trait ItemRepository {
     async fn get_items_by_id(&self, user_id: &str, ids: &Vec<&str>) -> Result<Vec<Item>>;
 
@@ -226,7 +227,7 @@ impl ItemRepositorySqlite {
     }
 }
 
-#[rocket::async_trait]
+#[async_trait]
 impl ItemRepository for ItemRepositorySqlite {
     async fn get_items_by_id(&self, user_id: &str, ids: &Vec<&str>) -> Result<Vec<Item>> {
         if ids.is_empty() {
