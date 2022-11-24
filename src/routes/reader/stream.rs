@@ -58,7 +58,7 @@ pub async fn get_item_ids(
     services: web::Data<Services>,
     query: web::Query<Query>,
 ) -> HttpResponse {
-    let user = &auth_user.user;
+    let user_id = &auth_user.id;
     let page_option = PageOption::<String> {
         offset: query.c.as_deref().map(|s| String::from(s)),
         limit: query.n.unwrap_or(100usize),
@@ -68,22 +68,22 @@ pub async fn get_item_ids(
     let item_ids_page = match filter_type {
         FilterType::STARRED => services
             .stream_service
-            .get_starred_item_ids(&user.id, page_option)
+            .get_starred_item_ids(user_id, page_option)
             .await
             .unwrap(),
         FilterType::UNREAD => services
             .stream_service
-            .get_unread_item_ids(&user.id, page_option)
+            .get_unread_item_ids(user_id, page_option)
             .await
             .unwrap(),
         FilterType::READ => services
             .stream_service
-            .get_read_item_ids(&user.id, page_option)
+            .get_read_item_ids(user_id, page_option)
             .await
             .unwrap(),
         FilterType::ALL => services
             .stream_service
-            .get_all_item_ids(&user.id, page_option)
+            .get_all_item_ids(user_id, page_option)
             .await
             .unwrap(),
     };
@@ -110,14 +110,14 @@ pub async fn get_contents(
     services: web::Data<Services>,
     ids: web::Form<Ids>,
 ) -> HttpResponse {
-    let user = &auth_user.user;
+    let user_id = &auth_user.id;
     let mut item_contents = match ids.i {
         Some(ref i) => {
             let ids_in_hex =
                 super::convert_to_long_form_ids(&i.iter().map(|s| s.as_str()).collect());
             services
                 .stream_service
-                .get_item_contents(&user.id, &ids_in_hex.iter().map(|s| &**s).collect())
+                .get_item_contents(user_id, &ids_in_hex.iter().map(|s| &**s).collect())
                 .await
                 .unwrap()
         }

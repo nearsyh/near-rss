@@ -1,6 +1,6 @@
 use crate::common::error::to_internal_error;
-use crate::common::{token::Token, Services};
-use crate::database::users::User;
+use crate::common::token::Token;
+use crate::user::{User, UserService};
 use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::error::ErrorForbidden;
@@ -10,7 +10,9 @@ use actix_web_lab::middleware::Next;
 
 #[derive(Clone)]
 pub struct AuthUser {
-    pub user: User,
+    pub id: String,
+    pub email: String,
+    pub token: String,
 }
 
 pub async fn reject_anonymous_user(
@@ -28,13 +30,16 @@ pub async fn reject_anonymous_user(
 
     if Token::is_valid(token) {
         let user = req
-            .app_data::<web::Data<Services>>()
+            .app_data::<web::Data<UserService>>()
             .expect("Failed to get state")
-            .user_service
             .get_user(token)
             .await
             .map_err(to_internal_error)?;
-        req.extensions_mut().insert(AuthUser { user });
+        req.extensions_mut().insert(AuthUser {
+            id: user.id,
+            email: user.email,
+            token: user.token,
+        });
         next.call(req).await
     } else {
         Err(ErrorForbidden("Unauthorized"))

@@ -14,11 +14,11 @@ pub async fn list_subscriptions(
     auth_user: web::ReqData<AuthUser>,
     services: web::Data<Services>,
 ) -> HttpResponse {
-    let user = &auth_user.user;
+    let user_id = &auth_user.id;
     // TODO: handle error properly
     let subscriptions = services
         .subscription_service
-        .list_subscriptions(&user.id)
+        .list_subscriptions(user_id)
         .await
         .unwrap();
     HttpResponse::Ok().json(Subscriptions { subscriptions })
@@ -42,11 +42,11 @@ pub async fn add_subscription(
     services: web::Data<Services>,
     request: web::Form<AddRequest>,
 ) -> HttpResponse {
-    let user = &auth_user.user;
+    let user_id = &auth_user.id;
     // TODO: handle error properly
     let subscription = services
         .subscription_service
-        .add_subscription_from_url(&user.id, &request.quickadd)
+        .add_subscription_from_url(user_id, &request.quickadd)
         .await
         .unwrap();
     HttpResponse::Ok().json(AddSubscriptionResponse {
@@ -75,20 +75,20 @@ pub async fn edit_subscription(
     services: web::Data<Services>,
     request: web::Form<SubscriptionEditRequest>,
 ) -> HttpResponse {
-    let user = &auth_user.user;
+    let user_id = &auth_user.id;
     if let Some(feed_url) = request.s.strip_prefix("feed/") {
         match request.ac.deref() {
             "subscribe" => {
                 services
                     .subscription_service
-                    .add_subscription_from_url(&user.id, feed_url)
+                    .add_subscription_from_url(user_id, feed_url)
                     .await
                     .unwrap();
             }
             "unsubscribe" => {
                 services
                     .subscription_service
-                    .remove_subscription(&user.id, &request.s)
+                    .remove_subscription(user_id, &request.s)
                     .await
                     .unwrap();
             }
@@ -99,7 +99,7 @@ pub async fn edit_subscription(
         services
             .subscription_service
             .edit_subscription(
-                &user.id,
+                user_id,
                 &request.s,
                 &request.t.as_deref(),
                 &request.a.iter().map(|s| s.as_str()).collect(),

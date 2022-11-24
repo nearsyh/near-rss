@@ -15,12 +15,11 @@ pub struct UserInfo {
 }
 
 pub async fn get_user_info(auth_user: web::ReqData<AuthUser>) -> HttpResponse {
-    let user = &auth_user.user;
     HttpResponse::Ok().json(UserInfo {
-        user_id: user.id.clone(),
-        user_name: user.email.clone(),
-        user_profile_id: user.id.clone(),
-        user_email: user.email.clone(),
+        user_id: auth_user.id.clone(),
+        user_name: auth_user.email.clone(),
+        user_profile_id: auth_user.id.clone(),
+        user_email: auth_user.email.clone(),
         is_blogged_user: true,
         signup_time_sec: 12345678,
         is_multi_login_enabled: true,
@@ -28,5 +27,5 @@ pub async fn get_user_info(auth_user: web::ReqData<AuthUser>) -> HttpResponse {
 }
 
 pub async fn token(auth_user: web::ReqData<AuthUser>) -> HttpResponse {
-    HttpResponse::Ok().body(auth_user.user.token.clone())
+    HttpResponse::Ok().body(auth_user.token.clone())
 }

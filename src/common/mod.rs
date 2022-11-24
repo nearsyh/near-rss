@@ -4,7 +4,6 @@ pub mod token;
 
 use crate::services::stream::StreamService;
 use crate::services::subscriptions::SubscriptionService;
-use crate::services::users::UserService;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct PageOption<T> {
@@ -78,7 +77,6 @@ pub fn oldest_allowed_time_ms() -> i64 {
 }
 
 pub struct Services {
-    pub user_service: Box<dyn UserService + Send + Sync>,
     pub subscription_service: Box<dyn SubscriptionService + Send + Sync>,
     pub stream_service: Box<dyn StreamService + Send + Sync>,
 }

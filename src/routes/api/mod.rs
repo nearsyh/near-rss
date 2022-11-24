@@ -22,7 +22,7 @@ pub async fn get_unread_items(
     services: web::Data<Services>,
     page: web::Query<Page>,
 ) -> HttpResponse {
-    let user_id = &auth_user.user.id;
+    let user_id = &auth_user.id;
     let contents = services
         .stream_service
         .get_unread_item_contents(
@@ -55,7 +55,7 @@ pub async fn mark_as_read(
     let str_ids = ids.ids.iter().map(|s| &**s).collect();
     services
         .stream_service
-        .mark_as_read(&auth_user.user.id, &str_ids)
+        .mark_as_read(&auth_user.id, &str_ids)
         .await
         .unwrap();
     HttpResponse::Ok().body("OK")
@@ -75,7 +75,7 @@ pub async fn add_subscription(
 ) -> HttpResponse {
     let added = services
         .subscription_service
-        .add_subscription_from_url(&auth_user.user.id, &subscription.link)
+        .add_subscription_from_url(&auth_user.id, &subscription.link)
         .await
         .unwrap();
     if let Some(ref f) = subscription.folder {
@@ -87,7 +87,7 @@ pub async fn add_subscription(
         };
         services
             .subscription_service
-            .edit_subscription(&auth_user.user.id, &added.id, &title, &vec![&tag], &vec![])
+            .edit_subscription(&auth_user.id, &added.id, &title, &vec![&tag], &vec![])
             .await
             .unwrap();
     }

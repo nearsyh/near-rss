@@ -1,6 +1,5 @@
 pub mod items;
 pub mod subscriptions;
-pub mod users;
 
 use log::LevelFilter;
 use sqlx::{sqlite::SqliteConnectOptions, ConnectOptions, SqlitePool};

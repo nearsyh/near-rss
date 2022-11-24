@@ -15,7 +15,7 @@ pub async fn edit_tag(
     services: web::Data<Services>,
     request: web::Form<EditTagRequest>,
 ) -> HttpResponse {
-    let user_id = &auth_user.user.id;
+    let user_id = &auth_user.id;
     if let Some(ref ids) = request.i {
         let ids_in_hex = super::convert_to_long_form_ids(&ids.iter().map(|s| s.as_str()).collect());
         let ids_ref = &ids_in_hex.iter().map(|s| &**s).collect::<Vec<&str>>();

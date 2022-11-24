@@ -6,10 +6,12 @@ mod middlewares;
 pub mod refresh;
 mod routes;
 mod services;
+mod user;
 
 use crate::common::Services;
 use crate::configuration::Configuration;
 use crate::middlewares::auth::reject_anonymous_user;
+use crate::user::UserService;
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpServer};
 use actix_web_lab::middleware::from_fn;
@@ -30,8 +32,8 @@ impl Application {
             SqlitePoolOptions::new().connect_lazy_with(configuration.database.connect_options());
         let services = web::Data::new(Services::new(sqlite_pool.clone()).await);
 
-        services
-            .user_service
+        let user_service = web::Data::new(UserService::new(sqlite_pool.clone()));
+        user_service
             .register(
                 &configuration.application.email,
                 &configuration.application.password,
@@ -49,6 +51,7 @@ impl Application {
         let server = HttpServer::new(move || {
             App::new()
                 .app_data(services.clone())
+                .app_data(user_service.clone())
                 .service(web::scope("/accounts").route(
                     "/ClientLogin",
                     web::post().to(routes::accounts::client_login),
@@ -57,6 +60,7 @@ impl Application {
                     web::scope("/api")
                         .wrap(from_fn(reject_anonymous_user))
                         .app_data(services.clone())
+                        .app_data(user_service.clone())
                         .route(
                             "/addSubscription",
                             web::post().to(routes::api::add_subscription),
@@ -68,6 +72,7 @@ impl Application {
                     web::scope("/reader")
                         .wrap(from_fn(reject_anonymous_user))
                         .app_data(services.clone())
+                        .app_data(user_service.clone())
                         .route("/ping", web::get().to(routes::reader::ping))
                         .service(
                             web::scope("/api/0")

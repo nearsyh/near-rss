@@ -1,4 +1,4 @@
-use crate::common::Services;
+use crate::user::UserService;
 use actix_web::{web, HttpResponse};
 
 #[derive(serde::Deserialize)]
@@ -10,13 +10,9 @@ pub struct LoginRequest {
 
 pub async fn client_login(
     request: web::Form<LoginRequest>,
-    services: web::Data<Services>,
+    user_service: web::Data<UserService>,
 ) -> HttpResponse {
-    match services
-        .user_service
-        .login(&request.email, &request.passwd)
-        .await
-    {
+    match user_service.login(&request.email, &request.passwd).await {
         Ok(ref creds) => HttpResponse::Ok().body(format!(
             "SID={}\nLSID={}\nAuth={}",
             creds.sid, creds.lsid, creds.cltoken
