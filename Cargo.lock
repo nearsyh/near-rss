@@ -1296,7 +1296,6 @@ dependencies = [
  "feed-rs",
  "futures",
  "log",
- "portpicker",
  "rand 0.8.3",
  "reqwest",
  "serde 1.0.147",
@@ -1460,15 +1459,6 @@ name = "pkg-config"
 version = "0.3.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3831453b3449ceb48b6d9c7ad7c96d5ea673e9b470a1dc578c2ce6521230884c"
-
-[[package]]
-name = "portpicker"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be97d76faf1bfab666e1375477b23fde79eccf0276e9b63b92a39d676a889ba9"
-dependencies = [
- "rand 0.8.3",
-]
 
 [[package]]
 name = "ppv-lite86"

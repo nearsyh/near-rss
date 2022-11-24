@@ -424,7 +424,7 @@ mod tests {
         )
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     pub async fn insert_items_should_succeed() {
         let repository = new_item_repository(in_memory_pool().await).await.unwrap();
         let items = vec![
@@ -441,7 +441,7 @@ mod tests {
         assert_eq!(fetched_items, items);
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     pub async fn insert_same_items_should_do_nothing() {
         let repository = new_item_repository(in_memory_pool().await).await.unwrap();
         let mut items = vec![new_fake_item("1", 1), new_fake_item("2", 2)];
@@ -474,7 +474,7 @@ mod tests {
         assert!(item.read);
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     pub async fn mark_all_as_read_should_succeed() {
         let repository = new_item_repository(in_memory_pool().await).await.unwrap();
         let items = vec![
@@ -492,7 +492,7 @@ mod tests {
             .is_empty());
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     pub async fn mark_older_as_read_should_succeed() {
         let repository = new_item_repository(in_memory_pool().await).await.unwrap();
         let items = vec![
@@ -519,7 +519,7 @@ mod tests {
             .is_empty());
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     pub async fn mark_item_should_succeed() {
         let repository = new_item_repository(in_memory_pool().await).await.unwrap();
         let mut items = vec![

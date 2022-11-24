@@ -32,7 +32,6 @@ impl Application {
             SqlitePoolOptions::new().connect_lazy_with(configuration.database.connect_options());
         let services = web::Data::new(Services::new(sqlite_pool.clone()).await);
 
-        println!("{:?}", configuration);
         services
             .user_service
             .register(

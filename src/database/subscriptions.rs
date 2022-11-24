@@ -201,7 +201,7 @@ mod tests {
     use super::super::in_memory_pool;
     use super::*;
 
-    #[rocket::async_test]
+    #[tokio::test]
     pub async fn insert_and_get_subscription_should_succeed() {
         let repository = new_subscription_repository(in_memory_pool().await)
             .await
@@ -230,7 +230,7 @@ mod tests {
         );
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     pub async fn remove_subscription_should_succeed() {
         let repository = new_subscription_repository(in_memory_pool().await)
             .await
@@ -260,7 +260,7 @@ mod tests {
             .is_none());
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     pub async fn update_subscription_should_succeed() {
         let repository = new_subscription_repository(in_memory_pool().await)
             .await
@@ -301,7 +301,7 @@ mod tests {
         );
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     pub async fn list_subscriptions_should_succeed() {
         let repository = new_subscription_repository(in_memory_pool().await)
             .await

@@ -1,5 +1,5 @@
 use crate::data::Subscriptions;
-use crate::helpers::{spawn_app, spawn_app_by_type, TestApp};
+use crate::helpers::{spawn_app, TestApp};
 
 #[tokio::test]
 async fn anonymous_add_subscription_should_fail() {

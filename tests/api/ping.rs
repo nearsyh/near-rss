@@ -1,4 +1,4 @@
-use crate::helpers::{spawn_app, spawn_app_by_type};
+use crate::helpers::spawn_app;
 
 #[tokio::test]
 async fn anonymous_ping_should_fail() {

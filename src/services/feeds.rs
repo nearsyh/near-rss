@@ -61,7 +61,7 @@ pub fn new_feed_service() -> Box<dyn FeedService + Send + Sync> {
 mod tests {
     use super::*;
 
-    #[rocket::async_test]
+    #[tokio::test]
     async fn get_feed_should_work() {
         let feed_service = FeedServiceImpl {};
         let feed: Feed = feed_service
@@ -71,7 +71,7 @@ mod tests {
         assert_eq!(&feed.title.as_ref().unwrap().content, "Hacker News Daily");
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     async fn get_feeds_should_work() {
         let feed_service = FeedServiceImpl {};
         let feed_1 = "https://www.daemonology.net/hn-daily/index.rss";

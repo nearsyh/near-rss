@@ -1,5 +1,5 @@
 use crate::data::Contents;
-use crate::helpers::{spawn_app, spawn_app_by_type};
+use crate::helpers::spawn_app;
 use std::collections::HashSet;
 
 #[tokio::test]

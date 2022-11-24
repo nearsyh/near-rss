@@ -1,4 +1,4 @@
-use near_rss::configuration::{get_configuration, Configuration};
+use near_rss::configuration::get_configuration;
 use near_rss::database::users::User;
 use near_rss::Application;
 use reqwest::redirect::Policy;
@@ -201,9 +201,12 @@ impl TestApp {
 }
 
 pub async fn spawn_app() -> TestApp {
+    let test_user = TestUser::generate();
     let configuration = {
         let mut c = get_configuration().expect("Failed to get configuration.");
         c.application.port = 0;
+        c.application.email = test_user.email.clone();
+        c.application.password = test_user.password.clone();
         c
     };
 
@@ -216,8 +219,6 @@ pub async fn spawn_app() -> TestApp {
     let _ = tokio::spawn(app.run_until_stopped());
 
     configure_database(&pool).await;
-    let test_user = TestUser::generate();
-    test_user.store(&pool).await;
 
     let client = Client::builder()
         .redirect(Policy::none())

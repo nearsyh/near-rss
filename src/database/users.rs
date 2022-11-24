@@ -133,7 +133,7 @@ mod tests {
     use super::super::in_memory_pool;
     use super::*;
 
-    #[rocket::async_test]
+    #[tokio::test]
     async fn create_user_should_work() {
         let repository = new_user_repository(in_memory_pool().await).await.unwrap();
         let created_user = repository
@@ -145,7 +145,7 @@ mod tests {
         assert_ne!(created_user.password_hash, "password");
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     async fn create_users_with_same_emails_should_not_change_password() {
         let repository = new_user_repository(in_memory_pool().await).await.unwrap();
         assert!(repository
@@ -166,7 +166,7 @@ mod tests {
             .match_password("1"));
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     async fn get_existing_users_should_succeed() {
         let repository = new_user_repository(in_memory_pool().await).await.unwrap();
         let created_user = repository.create_user("email", "").await.unwrap().unwrap();
@@ -196,7 +196,7 @@ mod tests {
         );
     }
 
-    #[rocket::async_test]
+    #[tokio::test]
     async fn get_non_existing_users_should_fail() {
         let repository = new_user_repository(in_memory_pool().await).await.unwrap();
         assert!(repository.get_user_by_id("id").await.unwrap().is_none());
