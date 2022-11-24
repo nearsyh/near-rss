@@ -1,7 +1,4 @@
-#![feature(proc_macro_hygiene, decl_macro)]
-
-#[macro_use]
-mod common;
+pub mod common;
 pub mod configuration;
 pub mod database;
 mod middlewares;

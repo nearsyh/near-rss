@@ -29,6 +29,10 @@ actix-web = "4"
 actix-files = "0.6"
 actix-web-lab = "0.18"
 tracing = { version = "0.1", features = ["log"] }
+tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
+tracing-bunyan-formatter = "0.3"
+tracing-log = "0.1"
+tracing-actix-web = "0.5"
 async-trait = "0.1"
 
 [dependencies.reqwest]

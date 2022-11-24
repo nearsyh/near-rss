@@ -1,4 +1,5 @@
 pub mod error;
+pub mod telemetry;
 pub mod token;
 
 use crate::services::stream::StreamService;

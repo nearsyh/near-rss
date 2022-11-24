@@ -1,3 +1,4 @@
+use near_rss::common::telemetry::{get_subscriber, init_subscriber};
 use near_rss::configuration::get_configuration;
 use near_rss::refresh::refresh_until_stopped;
 use near_rss::Application;
@@ -6,8 +7,8 @@ use tokio::task::JoinError;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // let subscriber = get_subscriber("zero2prod".into(), "info".into(), std::io::stdout);
-    // init_subscriber(subscriber);
+    let subscriber = get_subscriber("near-rss".into(), "info".into(), std::io::stdout);
+    init_subscriber(subscriber);
 
     let configuration = get_configuration().expect("Failed to read configuration.");
     let application = Application::create(&configuration).await?;
