@@ -24,21 +24,28 @@ The UI is a copy of the [stringer](https://github.com/swanson/stringer) project,
 ## Local test
 
 ```
-EMAIL="email" PASSWORD="password" ENDPOINT="http://localhost:8000" cargo run
+# Initialize your Sqlite database.
+sqlx database create
+sqlx migrate run
+
+APP_APPLICATION__EMAIL=your-email@email.com APP_APPLICATION__PASSWORD=1234 cargo run
 ```
 
-It will start both the server and the web-ui at localhost:8000. You can use `email` and `password` to login.
+It will start both the server and the web-ui at localhost:7555. You can use `email` and `password` to login.
 
 ## Deploy
 
-First, you need to update the `endpoint` value defined in `public/javascripts/connector.js` to your own hostname.
-
-Then run the following commands to start your own instance.
+Run the following commands to start your own instance. You can also update the `configuration/production.yaml` to change the config.
 
 ```
+# Build
 cargo build --release
 
-EMAIL="your-email" PASSWORD="your-password" DB="databasefile" ENDPOINT="your-server-address" ./target/release/near-rss
+# Initialize your Sqlite database.
+sqlx database create
+sqlx migrate run
+
+APP_ENVIRONMENT=production APP_APPLICATION__EMAIL=your-email@email.com APP_APPLICATION__PASSWORD=1234 ./target/release/near-rss
 ```
 
 ## Import your subscriptions
