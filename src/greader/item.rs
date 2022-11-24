@@ -14,4 +14,13 @@ impl Item {
         }
         ret
     }
+
+    pub fn id_str_to_i64(id: &str) -> i64 {
+        if id.starts_with("tag:google.com,2005:reader/item/") {
+            let id_hex = id.strip_prefix("tag:google.com,2005:reader/item/").unwrap();
+            i64::from_str_radix(id_hex, 16).unwrap_or(-1)
+        } else {
+            id.parse::<i64>().unwrap_or(-1)
+        }
+    }
 }

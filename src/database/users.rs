@@ -41,8 +41,6 @@ impl User {
 #[async_trait]
 pub trait UserRepository {
     async fn create_user(&self, email: &str, password: &str) -> Result<Option<User>>;
-    async fn update_user(&self, user: User) -> Result<Option<User>>;
-    async fn get_user_by_id(&self, id: &str) -> Result<Option<User>>;
     async fn get_user_by_email(&self, email: &str) -> Result<Option<User>>;
     async fn get_user_by_token(&self, token: &str) -> Result<Option<User>>;
 }
@@ -82,31 +80,9 @@ impl UserRepository for UserRepositorySqlite {
         Ok(Some(new_user))
     }
 
-    async fn update_user(&self, user: User) -> Result<Option<User>> {
-        if self.get_user_by_id(&user.id).await?.is_none() {
-            return Ok(None);
-        }
-        sqlx::query("UPDATE Users SET email = ?, password_hash = ?, token = ? WHERE id = ?")
-            .bind(&user.email)
-            .bind(&user.password_hash)
-            .bind(&user.token)
-            .bind(&user.id)
-            .execute(&self.pool)
-            .await?;
-        Ok(Some(user))
-    }
-
     async fn get_user_by_email(&self, email: &str) -> Result<Option<User>> {
         let user = sqlx::query_as::<_, User>("SELECT * FROM Users WHERE email = ?")
             .bind(email)
-            .fetch_optional(&self.pool)
-            .await?;
-        Ok(user)
-    }
-
-    async fn get_user_by_id(&self, id: &str) -> Result<Option<User>> {
-        let user = sqlx::query_as::<_, User>("SELECT * FROM Users WHERE id = ?")
-            .bind(id)
             .fetch_optional(&self.pool)
             .await?;
         Ok(user)
@@ -172,14 +148,6 @@ mod tests {
         let created_user = repository.create_user("email", "").await.unwrap().unwrap();
         assert_eq!(
             repository
-                .get_user_by_id(&created_user.id)
-                .await
-                .unwrap()
-                .unwrap(),
-            created_user
-        );
-        assert_eq!(
-            repository
                 .get_user_by_email("email")
                 .await
                 .unwrap()
@@ -199,7 +167,6 @@ mod tests {
     #[tokio::test]
     async fn get_non_existing_users_should_fail() {
         let repository = new_user_repository(in_memory_pool().await).await.unwrap();
-        assert!(repository.get_user_by_id("id").await.unwrap().is_none());
         assert!(repository
             .get_user_by_email("email")
             .await
