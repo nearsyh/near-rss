@@ -1,6 +1,6 @@
 use crate::common::error::to_internal_error;
 use crate::common::token::Token;
-use crate::user::{User, UserService};
+use crate::user::UserService;
 use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::error::ErrorForbidden;

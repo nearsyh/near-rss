@@ -12,7 +12,7 @@ use crate::common::Services;
 use crate::configuration::Configuration;
 use crate::middlewares::auth::reject_anonymous_user;
 use crate::user::UserService;
-use actix_web::dev::Server;
+use actix_web::dev::{HttpServiceFactory, Server};
 use actix_web::{web, App, HttpServer};
 use actix_web_lab::middleware::from_fn;
 use anyhow::{Context, Result};
@@ -56,57 +56,15 @@ impl Application {
                     "/ClientLogin",
                     web::post().to(routes::accounts::client_login),
                 ))
-                .service(
-                    web::scope("/api")
-                        .wrap(from_fn(reject_anonymous_user))
-                        .app_data(services.clone())
-                        .app_data(user_service.clone())
-                        .route(
-                            "/addSubscription",
-                            web::post().to(routes::api::add_subscription),
-                        )
-                        .route("/markAsRead", web::post().to(routes::api::mark_as_read))
-                        .route("/unread", web::get().to(routes::api::get_unread_items)),
-                )
-                .service(
-                    web::scope("/reader")
-                        .wrap(from_fn(reject_anonymous_user))
-                        .app_data(services.clone())
-                        .app_data(user_service.clone())
-                        .route("/ping", web::get().to(routes::reader::ping))
-                        .service(
-                            web::scope("/api/0")
-                                .route(
-                                    "/user-info",
-                                    web::get().to(routes::reader::users::get_user_info),
-                                )
-                                .route("/token", web::get().to(routes::reader::users::token))
-                                .route(
-                                    "/subscription/list",
-                                    web::get()
-                                        .to(routes::reader::subscriptions::list_subscriptions),
-                                )
-                                .route(
-                                    "/subscription/quickadd",
-                                    web::post().to(routes::reader::subscriptions::add_subscription),
-                                )
-                                .route(
-                                    "/subscription/edit",
-                                    web::post()
-                                        .to(routes::reader::subscriptions::edit_subscription),
-                                )
-                                .route("/edit-tag", web::post().to(routes::reader::edit::edit_tag))
-                                .route(
-                                    "/stream/items/ids",
-                                    web::get().to(routes::reader::stream::get_item_ids),
-                                )
-                                .route(
-                                    "/stream/items/contents",
-                                    web::post().to(routes::reader::stream::get_contents),
-                                ),
-                        ),
-                )
-                .service(actix_files::Files::new("/", "./public"))
+                .service(Application::web_api_routes(
+                    services.clone(),
+                    user_service.clone(),
+                ))
+                .service(Application::reader_routes(
+                    services.clone(),
+                    user_service.clone(),
+                ))
+                .service(actix_files::Files::new("/", "./public").index_file("index.html"))
         })
         .listen(listener)?
         .run();
@@ -120,5 +78,61 @@ impl Application {
 
     pub async fn run_until_stopped(self) -> Result<()> {
         self.server.await.context("Failed to launch actix server")
+    }
+
+    fn web_api_routes(
+        services: web::Data<Services>,
+        user_service: web::Data<UserService>,
+    ) -> impl HttpServiceFactory + 'static {
+        web::scope("/api")
+            .wrap(from_fn(reject_anonymous_user))
+            .app_data(services)
+            .app_data(user_service)
+            .route(
+                "/addSubscription",
+                web::post().to(routes::api::add_subscription),
+            )
+            .route("/markAsRead", web::post().to(routes::api::mark_as_read))
+            .route("/unread", web::get().to(routes::api::get_unread_items))
+    }
+
+    fn reader_routes(
+        services: web::Data<Services>,
+        user_service: web::Data<UserService>,
+    ) -> impl HttpServiceFactory + 'static {
+        web::scope("/reader")
+            .wrap(from_fn(reject_anonymous_user))
+            .app_data(services)
+            .app_data(user_service)
+            .route("/ping", web::get().to(routes::reader::ping))
+            .service(
+                web::scope("/api/0")
+                    .route(
+                        "/user-info",
+                        web::get().to(routes::reader::users::get_user_info),
+                    )
+                    .route("/token", web::get().to(routes::reader::users::token))
+                    .route(
+                        "/subscription/list",
+                        web::get().to(routes::reader::subscriptions::list_subscriptions),
+                    )
+                    .route(
+                        "/subscription/quickadd",
+                        web::post().to(routes::reader::subscriptions::add_subscription),
+                    )
+                    .route(
+                        "/subscription/edit",
+                        web::post().to(routes::reader::subscriptions::edit_subscription),
+                    )
+                    .route("/edit-tag", web::post().to(routes::reader::edit::edit_tag))
+                    .route(
+                        "/stream/items/ids",
+                        web::get().to(routes::reader::stream::get_item_ids),
+                    )
+                    .route(
+                        "/stream/items/contents",
+                        web::post().to(routes::reader::stream::get_contents),
+                    ),
+            )
     }
 }
