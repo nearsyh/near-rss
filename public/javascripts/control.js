@@ -24,8 +24,6 @@ function initializeLoginButton() {
         })
 }
 
-var showDialogEvent = undefined;
-
 function initializeMenuButtons() {
     document.getElementById('refresh-content')
         .addEventListener('click', async function(event) {
@@ -43,18 +41,22 @@ function initializeMenuButtons() {
 
     document.getElementById('add-subscription')
         .addEventListener('click', e => {
+            // TODO: use the state to decide how to render the page.
             document.getElementById('add-subscription-dialog').hidden = false;
+            state.addingSubscription = true;
             e.stopPropagation();
         });
 
     document.getElementById('login-container').addEventListener('click', e => {
         if (document.getElementById('add-subscription-dialog').hidden == false) {
             document.getElementById('add-subscription-dialog').hidden = true;
+            state.addingSubscription = false
         }
     });
 
     document.getElementById('add').addEventListener('click', async function(event) {
         document.getElementById('add-subscription-dialog').hidden = true;
+        state.addingSubscription = false;
         showSplash("Adding Subscription...");
         await addSubscription(
             document.getElementById('link').value,
@@ -73,7 +75,7 @@ function initializeScrollListener() {
 
 function initializeShortcuts() {
     document.addEventListener("keydown", async function(e) {
-        if (!state.login) {
+        if (!state.login || state.addingSubscription) {
             return;
         }
         if (e.key == 'v' && indexOfOpenItem() != -1) {

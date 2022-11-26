@@ -5,6 +5,7 @@ var state = {
     expandItem: false,
     nextOffset: undefined,
     isLoadingNextPage: false,
+    addingSubscription: false
 }
 
 function cleanUpState() {
@@ -13,6 +14,7 @@ function cleanUpState() {
     state.expandItem = false;
     state.nextOffset = undefined;
     state.isLoadingNextPage = false;
+    state.addingSubscription = false;
 }
 
 function addItems(new_items) {
